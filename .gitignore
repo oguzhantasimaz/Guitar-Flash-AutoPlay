@@ -1,0 +1,29 @@
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_vendor/
+bin/
+pkg/
+
+# Compiled Go binaries
+*.exe
+*.out
+*.test
+*.prof
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Project-specific files
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Go executables
+go.sum

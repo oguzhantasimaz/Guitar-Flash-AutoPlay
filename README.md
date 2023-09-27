@@ -23,7 +23,9 @@ go pressNote(866, 673, "k", &previousReceiveTimeK, img)
 go pressNote(970, 673, "l", &previousReceiveTimeL, img)
 ```
 
-Video Example
+Working Video Example
+
+[Youtube Video](https://youtube.com/shorts/noo72JP1h3k?feature=share "Working Example")
 
 
 Feel Free to Contribute

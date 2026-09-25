@@ -35,8 +35,14 @@ func (tr *tracker) update(t time.Time, gems []float64, line, speed float64) []ti
 		tr.set(t, gems, nil)
 		return nil
 	}
+	// The screen changes once per frame, much less often than it is read.
+	// Only a changed frame moves the gems, and the time since the last one
+	// is what they had to move in.
+	if tr.same(gems) {
+		return nil
+	}
 	dt := t.Sub(tr.at)
-	move := tr.shift(gems, speed*dt.Seconds())
+	move := tr.shift(gems, math.Min(speed, maxSpeed)*dt.Seconds(), maxSpeed*dt.Seconds()+matchTol)
 	used := make([]bool, len(gems))
 	var crossed []time.Time
 	var ghosts []float64
@@ -65,13 +71,16 @@ func (tr *tracker) update(t time.Time, gems []float64, line, speed float64) []ti
 // matchTol is how far a gem may be from where it should be, in spacings.
 const matchTol = 0.04
 
+// maxSpeed bounds how fast gems can move near the sensors, in spacings per
+// second; on expert they move about 4.
+const maxSpeed = 15.0
+
 // shift finds how far the gems moved down since the last frame: the
 // distance that lines up the most of them, the smallest one if several do
 // (in a stream, moving by one more gem lines them up too). Without any gem
 // to go by it returns the expected distance.
-func (tr *tracker) shift(gems []float64, expected float64) float64 {
+func (tr *tracker) shift(gems []float64, expected, limit float64) float64 {
 	best, bestScore := expected, 0
-	limit := math.Max(3*expected, 0.5)
 	for _, p := range tr.prev {
 		if p.ghost {
 			continue
@@ -108,6 +117,21 @@ func nearest(gems []float64, used []bool, h float64) int {
 		}
 	}
 	return best
+}
+
+// same reports whether gems are exactly the gems of the last frame.
+func (tr *tracker) same(gems []float64) bool {
+	n := 0
+	for _, p := range tr.prev {
+		if p.ghost {
+			continue
+		}
+		if n >= len(gems) || gems[n] != p.h {
+			return false
+		}
+		n++
+	}
+	return n == len(gems)
 }
 
 func (tr *tracker) set(t time.Time, gems, ghosts []float64) {

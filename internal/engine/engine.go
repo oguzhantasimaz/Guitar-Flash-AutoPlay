@@ -217,7 +217,12 @@ func (e *Engine) measure(k int, t time.Time) {
 		}
 	}
 	if pick >= 0 {
-		e.travel.add(t.Sub(q[pick]).Seconds())
+		// Only keep what is physically possible: between 1 and maxSpeed
+		// spacings per second.
+		d := t.Sub(q[pick]).Seconds()
+		if dist := e.p.Upper - e.p.Lower; d >= dist/maxSpeed && d <= dist {
+			e.travel.add(d)
+		}
 		q = q[pick+1:]
 	}
 	e.queue[k] = q

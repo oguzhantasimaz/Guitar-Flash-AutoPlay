@@ -74,7 +74,7 @@ func testParams() Params {
 }
 
 // Window of the sensor columns around their line (see vision.Column).
-const columnAbove, columnBelow = 0.45, 0.35
+const columnAbove, columnBelow = 0.45, 0.2
 
 // gems returns what a sensor column around height line sees at time t: the
 // leading edges of the gem bodies in view, lowest first. A body that sticks

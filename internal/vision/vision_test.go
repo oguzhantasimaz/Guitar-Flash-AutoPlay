@@ -262,7 +262,7 @@ func TestColumnSeparatesAStream(t *testing.T) {
 		// A tight run on the red lane, like the solos of Through the Fire
 		// and Flames: gems only 0.24 spacings apart.
 		var want []float64
-		for h := 0.9; h <= 1.4; h += 0.24 {
+		for h := 0.98; h <= 1.47; h += 0.24 {
 			s.gems = append(s.gems, gemAt{1, h})
 			want = append(want, h-0.12*s.board.Scale(h)) // the body's bottom edge
 		}

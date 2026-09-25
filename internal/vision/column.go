@@ -18,10 +18,12 @@ type Column struct {
 	minRun int          // shortest run of rows that counts as a gem body
 }
 
-// Column window around the sensor line, in fret spacings.
+// Column window around the sensor line, in fret spacings. It stops short
+// of the flame drawn on a hit, which reaches 0.8 spacings up: in the yellow
+// and orange lanes it has the lane's colour.
 const (
 	columnAbove = 0.45
-	columnBelow = 0.35
+	columnBelow = 0.2
 )
 
 // NewColumn places a column on the board around height h.

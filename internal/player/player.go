@@ -203,8 +203,9 @@ func (k keyboard) Key(lane int, down bool) error {
 // follow plays until the board disappears (returns nil) or it has to stop.
 func follow(ctx context.Context, cfg Config, l Listener, eng *engine.Engine, board vision.Board) error {
 	p := cfg.Params
-	upper, lower := vision.NewLine(board, p.Upper), vision.NewLine(board, p.Lower)
-	region := upper.Bounds().Union(lower.Bounds()).Inset(-2)
+	upper, lower := vision.NewColumn(board, p.Upper), vision.NewColumn(board, p.Lower)
+	tails := vision.NewLine(board, p.Lower)
+	region := upper.Bounds().Union(lower.Bounds()).Union(tails.Bounds()).Inset(-2)
 	rings := image.Rect(
 		int(board.FretX(0)-board.RingW), int(board.Y-board.RingH),
 		int(board.FretX(4)+board.RingW)+1, int(board.Y+board.RingH)+1)
@@ -246,9 +247,9 @@ func follow(ctx context.Context, cfg Config, l Listener, eng *engine.Engine, boa
 			continue
 		}
 		failures = 0
-		up, flashU := upper.Read(img)
-		low, flashL := lower.Read(img)
-		sched.Add(eng.Update(t, up, low, flashU || flashL))
+		r := engine.Reading{Upper: upper.Read(img), Lower: lower.Read(img)}
+		r.Tail, r.Flash = tails.Read(img)
+		sched.Add(eng.Update(t, r))
 
 		if v, ok := eng.Speed(); ok && abs(v-reported) > 0.05*v {
 			reported = v
@@ -272,7 +273,7 @@ func follow(ctx context.Context, cfg Config, l Listener, eng *engine.Engine, boa
 			return nil
 		}
 		if cfg.Preview {
-			vision.DrawOverlay(shot, board, upper, lower)
+			vision.DrawOverlay(shot, board, vision.NewLine(board, p.Upper), tails)
 			l.Preview(shot)
 		}
 	}

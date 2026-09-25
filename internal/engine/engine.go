@@ -67,12 +67,25 @@ type Action struct {
 	Down bool
 }
 
+// Reading is what the sensors saw in one captured frame.
+type Reading struct {
+	// Upper and Lower are, per lane, the heights of the leading edges of the
+	// gems in view around each sensor line, lowest first (vision.Column).
+	Upper, Lower [5][]float64
+	// Tail is how much of each lane the lower line covers, gems or the tails
+	// of sustained notes (vision.Line); it tells how long to hold a key.
+	Tail [5]float64
+	// Flash is set for frames washed out by a full-screen flash.
+	Flash bool
+}
+
 // Engine consumes one reading per captured frame. It is not safe for
 // concurrent use.
 type Engine struct {
 	p      Params
-	upper  [5]detector
-	lower  [5]detector
+	upper  [5]tracker
+	lower  [5]tracker
+	tails  [5]detector
 	queue  [5][]time.Time // upper-line crossings waiting for their lower one
 	travel estimate       // upper-to-lower travel time, in seconds
 	down   [5]bool
@@ -117,11 +130,10 @@ func (e *Engine) delay() time.Duration {
 // sensor gets stuck on something that is not a note.
 const maxHold = 8 * time.Second
 
-// Update processes one frame captured at time t. upper and lower are the
-// gem coverage of each lane on the two sensor lines. Frames that are
-// flashing white are skipped.
-func (e *Engine) Update(t time.Time, upper, lower [5]float64, flash bool) []Action {
-	if flash {
+// Update processes one frame captured at time t. Frames that are flashing
+// white are skipped.
+func (e *Engine) Update(t time.Time, r Reading) []Action {
+	if r.Flash {
 		return nil
 	}
 	v, _ := e.Speed()
@@ -131,25 +143,26 @@ func (e *Engine) Update(t time.Time, upper, lower [5]float64, flash bool) []Acti
 	}
 	var acts []Action
 	for k := 0; k < 5; k++ {
-		for _, ev := range e.upper[k].update(t, upper[k], cfg) {
-			if ev.start {
-				if len(e.queue[k]) >= 16 {
-					e.queue[k] = e.queue[k][1:] // the lower line missed these
-				}
-				e.queue[k] = append(e.queue[k], ev.at)
+		for _, at := range e.upper[k].update(t, r.Upper[k], e.p.Upper, v) {
+			if len(e.queue[k]) >= 16 {
+				e.queue[k] = e.queue[k][1:] // the lower line missed these
 			}
+			e.queue[k] = append(e.queue[k], at)
 		}
-		for _, ev := range e.lower[k].update(t, lower[k], cfg) {
-			if ev.start {
-				e.measure(k, ev.at)
-				acts = append(acts, e.press(k, ev.at)...)
-			} else {
+		for _, at := range e.lower[k].update(t, r.Lower[k], e.p.Lower, v) {
+			e.measure(k, at)
+			acts = append(acts, e.press(k, at)...)
+		}
+		// The tail sensor only decides when to let go; the trackers decide
+		// when to press.
+		for _, ev := range e.tails[k].update(t, r.Tail[k], cfg) {
+			if !ev.start {
 				acts = append(acts, e.release(k, ev.at)...)
 			}
 		}
 		if e.down[k] && t.Sub(e.downAt[k]) > maxHold {
 			acts = append(acts, e.forceUp(k, t))
-			e.lower[k] = detector{}
+			e.tails[k] = detector{}
 		}
 	}
 	return acts

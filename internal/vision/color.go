@@ -120,6 +120,14 @@ func isNote(c Class, r, g, b uint8) bool {
 	return mn >= 170
 }
 
+// isBody reports whether a pixel is part of the coloured body of a gem of
+// colour c, leaving out the white cap: the cap and the gap below the next
+// gem are what keep gems in a stream apart.
+func isBody(c Class, r, g, b uint8) bool {
+	h, s, v := hsv(r, g, b)
+	return v >= 125 && s >= 115 && hueClass(h) == c
+}
+
 // isBright is used to spot the full-screen white flash the game plays on
 // special effects: anything clearly lighter than the dark highway counts.
 func isBright(r, g, b uint8) bool {

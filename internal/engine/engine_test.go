@@ -2,6 +2,7 @@ package engine
 
 import (
 	"math"
+	"sort"
 	"testing"
 	"time"
 )
@@ -72,6 +73,45 @@ func testParams() Params {
 	return p
 }
 
+// Window of the sensor columns around their line (see vision.Column).
+const columnAbove, columnBelow = 0.45, 0.35
+
+// gems returns what a sensor column around height line sees at time t: the
+// leading edges of the gem bodies in view, lowest first. A body that sticks
+// out of the bottom of the column is left out.
+func (s song) gems(lane int, line float64, t time.Duration) []float64 {
+	if s.flashing(t) {
+		return nil
+	}
+	frame := time.Duration(math.Floor(t.Seconds()*s.fps) / s.fps * float64(time.Second))
+	lo, hi := line-columnBelow, line+columnAbove
+	var out []float64
+	for _, n := range s.notes {
+		if n.lane != lane {
+			continue
+		}
+		c := s.height((n.hit - frame).Seconds())
+		bottom, top := c-gemHalf, c+gemHalf*0.4 // the body, below the white cap
+		if bottom <= lo || bottom > hi || top < lo {
+			continue // cut off at the bottom of the column, or not in view
+		}
+		out = append(out, bottom)
+	}
+	sort.Float64s(out)
+	return out
+}
+
+// reading is everything the sensors report at time t.
+func (s song) reading(p Params, t time.Duration) Reading {
+	r := Reading{Flash: s.flashing(t)}
+	for k := 0; k < 5; k++ {
+		r.Upper[k] = s.gems(k, p.Upper, t)
+		r.Lower[k] = s.gems(k, p.Lower, t)
+		r.Tail[k] = s.sensor(k, p.Lower, t)
+	}
+	return r
+}
+
 func (s song) flashing(t time.Duration) bool {
 	for _, f := range s.flash {
 		if t >= f.from && t < f.to {
@@ -88,12 +128,7 @@ func (s song) play(p Params, poll, length time.Duration) []timed {
 	start := time.Unix(1000, 0)
 	var out []timed
 	for t := time.Duration(0); t < length; t += poll {
-		var up, low [5]float64
-		for k := 0; k < 5; k++ {
-			up[k] = s.sensor(k, p.Upper, t)
-			low[k] = s.sensor(k, p.Lower, t)
-		}
-		for _, a := range e.Update(start.Add(t), up, low, s.flashing(t)) {
+		for _, a := range e.Update(start.Add(t), s.reading(p, t)) {
 			out = append(out, timed{a.At.Sub(start), a})
 		}
 	}
@@ -197,11 +232,7 @@ func TestMeasuresSpeed(t *testing.T) {
 		e := New(p)
 		start := time.Unix(0, 0)
 		for tm := time.Duration(0); tm < ms(3000); tm += ms(4) {
-			var up, low [5]float64
-			for k := range up {
-				up[k], low[k] = s.sensor(k, p.Upper, tm), s.sensor(k, p.Lower, tm)
-			}
-			e.Update(start.Add(tm), up, low, false)
+			e.Update(start.Add(tm), s.reading(p, tm))
 		}
 		// Notes cross from one sensor to the other in a handful of screen
 		// frames, so a single measurement is coarse; the average is close.
@@ -220,6 +251,18 @@ func TestFastStreamOnOneLane(t *testing.T) {
 	}
 	p := testParams()
 	checkPresses(t, s, p, s.play(p, ms(4), ms(3000)))
+}
+
+func TestDenseStream(t *testing.T) {
+	// Through the Fire and Flames: a run of notes on one lane so close that
+	// the gems almost touch, on a screen that only draws 30 frames a second.
+	s := song{speed: 3.5, fps: 30}
+	for i := 0; i < 24; i++ {
+		s.notes = append(s.notes, note{1, at(1000, 70, i), 0})
+	}
+	p := testParams()
+	acts := s.play(p, ms(4), ms(3500))
+	checkPresses(t, s, p, acts)
 }
 
 func TestHoldsSustains(t *testing.T) {
@@ -308,11 +351,7 @@ func TestAdaptsToNewSpeed(t *testing.T) {
 		if tm >= ms(4500) {
 			cur = fast
 		}
-		var up, low [5]float64
-		for k := range up {
-			up[k], low[k] = cur.sensor(k, p.Upper, tm), cur.sensor(k, p.Lower, tm)
-		}
-		for _, a := range e.Update(start.Add(tm), up, low, false) {
+		for _, a := range e.Update(start.Add(tm), cur.reading(p, tm)) {
 			acts = append(acts, timed{a.At.Sub(start), a})
 		}
 	}
@@ -330,10 +369,18 @@ func TestAdaptsToNewSpeed(t *testing.T) {
 }
 
 func TestReleaseAll(t *testing.T) {
-	e := New(testParams())
+	p := testParams()
+	e := New(p)
 	now := time.Unix(0, 0)
-	full := [5]float64{1, 0, 1, 0, 0}
-	e.Update(now, [5]float64{}, full, false)
+	// Gems on the green and yellow lanes cross the lower line.
+	var before, after Reading
+	for _, k := range []int{0, 2} {
+		before.Lower[k] = []float64{p.Lower + 0.05}
+		after.Lower[k] = []float64{p.Lower - 0.05}
+		after.Tail[k] = 1
+	}
+	e.Update(now, before)
+	e.Update(now.Add(20*time.Millisecond), after)
 	acts := e.ReleaseAll(now.Add(time.Second))
 	if len(acts) != 2 || acts[0].Down || acts[1].Down {
 		t.Fatalf("want two releases, got %v", acts)

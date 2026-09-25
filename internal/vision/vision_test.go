@@ -255,3 +255,30 @@ func TestFindBoardNextToColourfulBackground(t *testing.T) {
 		t.Errorf("got %v, want frets from x=400 with spacing 90", b)
 	}
 }
+
+func TestColumnSeparatesAStream(t *testing.T) {
+	for _, sp := range []float64{36, 64, 99.6} {
+		s := newScene(int(12*sp), int(7*sp), 4*sp, 6*sp, sp)
+		// A tight run on the red lane, like the solos of Through the Fire
+		// and Flames: gems only 0.24 spacings apart.
+		var want []float64
+		for h := 0.9; h <= 1.4; h += 0.24 {
+			s.gems = append(s.gems, gemAt{1, h})
+			want = append(want, h-0.12*s.board.Scale(h)) // the body's bottom edge
+		}
+		s.gems = append(s.gems, gemAt{3, 1.2})
+		got := NewColumn(s.board, 1.05).Read(s.render())
+		if len(got[1]) != len(want) {
+			t.Errorf("spacing %.0f: found %d red gems %.2f, want %d at %.2f", sp, len(got[1]), got[1], len(want), want)
+			continue
+		}
+		for i := range want {
+			if math.Abs(got[1][i]-want[i]) > 2/sp+0.02 {
+				t.Errorf("spacing %.0f: red gem %d at %.3f, want %.3f", sp, i, got[1][i], want[i])
+			}
+		}
+		if len(got[3]) != 1 || len(got[0]) != 0 {
+			t.Errorf("spacing %.0f: other lanes %v", sp, got)
+		}
+	}
+}

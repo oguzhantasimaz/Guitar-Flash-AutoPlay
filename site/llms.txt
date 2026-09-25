@@ -29,6 +29,12 @@ Key facts:
 - [All releases](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/releases)
 - [Source code and README](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay)
 
+## History
+
+- v1, March 2020: a ~50-line Python script written by Oğuzhan Taşımaz at university. It checked five fixed pixels on a 1920×1080 screen and pressed a key when one turned bright. Code: https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/blob/6c6fba1/guitarflash.py
+- v2, September 2023: rewritten in Go, smoother, still with coordinates edited by hand for each screen. Code: https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/blob/d5bd080/main.go
+- v3, September 2026: rebuilt from scratch as a Windows and macOS app with a window, automatic fretboard detection at any resolution and measured note speed, built with an AI pair programmer.
+
 ## How it works
 
 The app takes screenshots and looks for five rings (green, red, yellow, blue, orange) evenly spaced on a line, next to the white edges of the highway. Two sensor lines above the frets (1.9 and 1.05 fret spacings up) read each lane over a hundred times a second; each gem is tracked from frame to frame. The travel time between the lines gives the scroll speed; a note needs 1.45 times that time from the lower line to its fret, and the key goes down 120 ms early because the game counts a hit a little before the note is centred.

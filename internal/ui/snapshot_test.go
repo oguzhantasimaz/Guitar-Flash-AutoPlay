@@ -59,6 +59,8 @@ func TestSnapshots(t *testing.T) {
 	}{
 		{"ready", func(u *UI) {}},
 		{"readme", func(u *UI) { u.st.problems = nil }},
+		// The end of the page, with the log and the footer.
+		{"bottom", func(u *UI) { u.st.problems, u.page.ScrollToEnd = nil, true }},
 		{"searching", func(u *UI) {
 			u.st.problems = nil
 			u.st.running, u.st.state = true, player.Searching

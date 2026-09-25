@@ -43,6 +43,7 @@
       "@type": "Person",
       "@id": "https://guitarflash.oguzhantasimaz.com/#author",
       "name": "Oguzhan Tasimaz",
+      "alternateName": "Oğuzhan Taşımaz",
       "url": "https://github.com/oguzhantasimaz",
       "sameAs": ["https://github.com/oguzhantasimaz", "https://buymeacoffee.com/oguzhantasimaz"]
     },
@@ -53,7 +54,8 @@
       "description": "A free, open-source app for Windows and macOS that plays the browser rhythm game Guitar Flash automatically. It finds the fretboard on the screen at any resolution, follows every note and presses the fret keys on time.",
       "applicationCategory": "GameApplication",
       "operatingSystem": "Windows 10, Windows 11, macOS 11 or later",
-      "softwareVersion": "3",
+      "softwareVersion": "3.0.0",
+      "dateCreated": "2020-03-29",
       "isAccessibleForFree": true,
       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
       "license": "https://www.gnu.org/licenses/gpl-3.0.html",
@@ -99,6 +101,7 @@
         {"@type": "Question", "name": "How accurate is it?", "acceptedAnswer": {"@type": "Answer", "text": "Tested against the real game on Expert: Breakthrough at 99% (507 of 508 notes) and Through the Fire and Flames at 98% (2314 notes hit), in a browser that only drew about 30 frames per second."}},
         {"@type": "Question", "name": "Which keys and game style does it use?", "acceptedAnswer": {"@type": "Answer", "text": "It presses A, S, J, K and L by default, the Guitar Flash defaults; change them in the app if you changed Setting Keys in the game. Use the Tap game style."}},
         {"@type": "Question", "name": "Why does Windows or macOS warn me when I open it?", "acceptedAnswer": {"@type": "Answer", "text": "The app is not code-signed, so Windows SmartScreen and macOS Gatekeeper warn about it. On Windows click More info, then Run anyway. On macOS open System Settings, Privacy & Security, and click Open Anyway. The source code is public on GitHub."}},
+        {"@type": "Question", "name": "Who made Guitar Flash AutoPlay?", "acceptedAnswer": {"@type": "Answer", "text": "Oğuzhan Taşımaz. The first version was a small Python script written at university in March 2020. It was rewritten in Go in 2023 and rebuilt from scratch as a Windows and macOS app in 2026."}},
         {"@type": "Question", "name": "Is it affiliated with Guitar Flash?", "acceptedAnswer": {"@type": "Answer", "text": "No. It is an independent fan project and is not affiliated with Guitar Flash or gamesX. Please don't use it to submit scores to the rankings or in multiplayer duels."}}
       ]
     }
@@ -117,6 +120,7 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+[id] { scroll-margin-top: 72px; }
 body {
   margin: 0; background: var(--bg); color: var(--text);
   font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -210,6 +214,19 @@ th, td { text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--li
 th { color: var(--muted); font-weight: 600; font-size: 14px; background: var(--panel2); }
 td strong { color: #7ee08b; }
 
+.story { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
+.story > * { min-width: 0; }
+.timeline { list-style: none; padding: 0; margin: 0; position: relative; display: grid; gap: 22px; }
+.timeline::before { content: ""; position: absolute; left: 9px; top: 12px; bottom: 12px; width: 2px; background: var(--line); }
+.timeline li { position: relative; padding-left: 38px; }
+.timeline li::before { content: ""; position: absolute; left: 0; top: 4px; width: 20px; height: 20px; border-radius: 50%; border: 4px solid var(--c); background: var(--bg); box-sizing: border-box; }
+.timeline .year { font-size: 14px; font-weight: 700; color: var(--muted); letter-spacing: .03em; }
+.timeline h3 { margin: 2px 0 6px; font-size: 19px; }
+.timeline p { margin: 0; color: #cfcfdb; }
+.code pre { margin: 0; font-size: 13.5px; line-height: 1.55; color: #e6e6ee; }
+.code .c { color: #8a8aa3; }
+.code figcaption { text-align: left; }
+
 .faq details { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px; }
 .faq summary { cursor: pointer; font-weight: 650; font-size: 17px; }
 .faq details p { color: #cfcfdb; margin: 10px 0 0; }
@@ -223,7 +240,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: 
 footer a { color: var(--muted); }
 
 @media (max-width: 900px) {
-  .hero .wrap, .how, .two { grid-template-columns: 1fr; }
+  .hero .wrap, .how, .two, .story { grid-template-columns: 1fr; }
   .cards, .features { grid-template-columns: 1fr; }
   .glance { grid-template-columns: 1fr 1fr; }
   nav.links a:not(.bmc) { display: none; }
@@ -247,6 +264,7 @@ footer a { color: var(--muted); }
       <a href="#download">Download</a>
       <a href="#how-to-use">How to use</a>
       <a href="#how-it-works">How it works</a>
+      <a href="#story">Story</a>
       <a href="#faq">FAQ</a>
       <a href="https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay">GitHub</a>
       <a class="bmc" href="https://buymeacoffee.com/oguzhantasimaz" rel="noopener"><img src="img/bmc-button.png" alt="Buy me a coffee" width="143" height="40"></a>
@@ -367,7 +385,7 @@ footer a { color: var(--muted); }
   <section id="features" aria-labelledby="features-h">
     <div class="wrap">
       <h2 id="features-h">Why it works everywhere</h2>
-      <p class="intro">Simple Guitar Flash bots read fixed pixel positions and break as soon as the screen or zoom changes. This one looks for the game instead.</p>
+      <p class="intro">Versions 1 and 2 of this bot, like most Guitar Flash bots, read fixed pixel positions and broke as soon as the screen or zoom changed. Version 3 looks for the game instead.</p>
       <div class="features">
         <div class="feature"><h3><span class="dot" style="background:var(--green)"></span>Any screen</h3><p>Finds the fretboard itself: any resolution, browser zoom, Retina/HiDPI and Windows scaling from 100% to 200%, on any monitor.</p></div>
         <div class="feature"><h3><span class="dot" style="background:var(--red)"></span>Every difficulty</h3><p>Measures how fast the notes scroll while it plays, so the timing is right from Easy to Expert without any setting.</p></div>
@@ -443,6 +461,47 @@ footer a { color: var(--muted); }
     </div>
   </section>
 
+  <section id="story" aria-labelledby="story-h">
+    <div class="wrap">
+      <h2 id="story-h">The story</h2>
+      <p class="intro">I first wrote this bot at university in March 2020, back before AI could write code for you. It meant a lot to me then, and I always wanted to come back and build it properly.</p>
+      <div class="story">
+        <ol class="timeline">
+          <li style="--c:var(--green)">
+            <span class="year">2020 · v1</span>
+            <h3>Python, one file</h3>
+            <p>About 50 lines, committed just after midnight on 29 March 2020. It grabbed a strip of a 1920×1080 screen, checked one pixel above each fret and pressed the key when it turned bright. It only worked at that resolution, with the browser at 100% zoom. <a href="https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/blob/6c6fba1/guitarflash.py">See the code</a></p>
+          </li>
+          <li style="--c:var(--yellow)">
+            <span class="year">2023 · v2</span>
+            <h3>Go, and smoother</h3>
+            <p>The same idea rewritten in Go: one goroutine per lane, a fixed 100 ms wait before each key and a check that skips the white flashes. It played smoother, but the coordinates still had to be edited by hand for every screen. <a href="https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/blob/d5bd080/main.go">See the code</a> · <a href="https://youtube.com/shorts/noo72JP1h3k">Video</a></p>
+          </li>
+          <li style="--c:var(--accent2)">
+            <span class="year">2026 · v3</span>
+            <h3>Rebuilt from scratch</h3>
+            <p>The app I always wanted it to be: a window for Windows and macOS that finds the fretboard on any screen, measures how fast the notes move and follows every gem. This time I built it together with an AI pair programmer. The core idea is still v1's: watch the frets, and press when a note arrives.</p>
+          </li>
+        </ol>
+        <figure class="code">
+<pre><code><span class="c">#OĞUZHAN TAŞIMAZ 29.03.2020</span>
+
+y = 65  <span class="c"># 952</span>
+greenx = 58  <span class="c"># 782</span>
+redx = 147  <span class="c"># 864</span>
+yellowx = 237  <span class="c"># 950</span>
+bluex = 325  <span class="c"># 1030</span>
+orangex = 417  <span class="c"># 1118</span>
+basecolor = 75
+<span class="c">…</span>
+while True:
+    image = ImageGrab.grab(bbox=(710, 866, 1210, 1000)).convert('L')</code></pre>
+          <figcaption>From <a href="https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/blob/6c6fba1/guitarflash.py">guitarflash.py</a>, 2020: five pixel positions and a brightness threshold, for exactly one screen size.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
   <section id="faq" class="faq" aria-labelledby="faq-h">
     <div class="wrap">
       <h2 id="faq-h">Questions</h2>
@@ -454,6 +513,7 @@ footer a { color: var(--muted); }
       <details><summary>Which keys and game style does it use?</summary><p>It presses A, S, J, K and L by default, the Guitar Flash defaults; change them in the app if you changed <em>Setting Keys</em> in the game. Use the <strong>Tap</strong> game style.</p></details>
       <details><summary>Why does Windows or macOS warn me when I open it?</summary><p>The app is not code-signed, so Windows SmartScreen and macOS Gatekeeper warn about it. On Windows click <em>More info → Run anyway</em>. On macOS open <em>System Settings → Privacy &amp; Security</em> and click <em>Open Anyway</em>. The source code is public on <a href="https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay">GitHub</a>.</p></details>
       <details><summary>How do I stop it?</summary><p>Press <strong>Stop</strong> in the app, or move the mouse to the top-left corner of the screen. On the command line, press Ctrl+C.</p></details>
+      <details><summary>Who made it?</summary><p>Oğuzhan Taşımaz. The first version was a small Python script written at university in March 2020. It was rewritten in Go in 2023 and rebuilt from scratch as a Windows and macOS app in 2026. The whole story is <a href="#story">above</a>.</p></details>
       <details><summary>Is it affiliated with Guitar Flash?</summary><p>No. It is an independent fan project and is not affiliated with Guitar Flash or gamesX. Please don't use it to submit scores to the rankings or in multiplayer duels.</p></details>
     </div>
   </section>
@@ -471,7 +531,7 @@ footer a { color: var(--muted); }
 
 <footer>
   <div class="wrap">
-    <span>© 2026 <a href="https://github.com/oguzhantasimaz">Oguzhan Tasimaz</a> · <a href="https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay">Source on GitHub</a> · GPL-3.0</span>
+    <span>© 2020–2026 <a href="https://github.com/oguzhantasimaz">Oguzhan Tasimaz</a> · <a href="https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay">Source on GitHub</a> · GPL-3.0</span>
     <span>Not affiliated with Guitar Flash or gamesX. Last updated September 25, 2026.</span>
   </div>
 </footer>

@@ -77,6 +77,16 @@
       "dateModified": "2026-09-25"
     },
     {
+      "@type": "VideoObject",
+      "@id": "https://guitarflash.oguzhantasimaz.com/#video",
+      "name": "Guitar Flash AutoPlay playing Through the Fire and Flames on Expert",
+      "description": "Highlights from one full run of Through the Fire and Flames on Expert: the app finds the fretboard, follows every note and finishes at 99% (2346 of 2354 notes).",
+      "thumbnailUrl": "https://guitarflash.oguzhantasimaz.com/img/demo-poster.jpg",
+      "contentUrl": "https://guitarflash.oguzhantasimaz.com/video/demo.mp4",
+      "uploadDate": "2026-09-25",
+      "duration": "PT1M13S"
+    },
+    {
       "@type": "HowTo",
       "@id": "https://guitarflash.oguzhantasimaz.com/#how-to-use",
       "name": "How to use Guitar Flash AutoPlay",
@@ -227,6 +237,9 @@ td strong { color: #7ee08b; }
 .code .c { color: #8a8aa3; }
 .code figcaption { text-align: left; }
 
+.video { margin: 0; }
+.video video { width: 100%; height: auto; display: block; border-radius: var(--radius); border: 1px solid var(--line); background: #000; }
+
 .faq details { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px; }
 .faq summary { cursor: pointer; font-weight: 650; font-size: 17px; }
 .faq details p { color: #cfcfdb; margin: 10px 0 0; }
@@ -285,7 +298,7 @@ footer a { color: var(--muted); }
           <a class="btn btn-primary" id="dl-main" href="#download">Download free</a>
           <a class="btn btn-ghost" href="#how-to-use">How to use it</a>
         </div>
-        <p class="meta">Tested on the real game, Expert difficulty: <strong>99%</strong> on Through the Fire and Flames (2350 of 2354 notes), <strong>99%</strong> on Breakthrough. Open source (GPL-3.0). <a href="https://youtube.com/shorts/noo72JP1h3k">Watch it play on YouTube</a>.</p>
+        <p class="meta">Tested on the real game, Expert difficulty: <strong>99%</strong> on Through the Fire and Flames (2350 of 2354 notes), <strong>99%</strong> on Breakthrough. Open source (GPL-3.0). <a href="#watch">Watch it play</a>.</p>
       </div>
       <picture>
         <source srcset="img/app.webp" type="image/webp">
@@ -293,6 +306,21 @@ footer a { color: var(--muted); }
       </picture>
     </div>
   </div>
+
+  <section id="watch" aria-labelledby="watch-h">
+    <div class="wrap">
+      <h2 id="watch-h">See it play</h2>
+      <p class="intro">The app on the left, the game on the right: Through the Fire and Flames on Expert, from pressing Start to the result screen.</p>
+      <figure class="video">
+        <video controls muted playsinline preload="metadata" poster="img/demo-poster.jpg" width="1280" height="720">
+          <source src="video/demo.mp4" type="video/mp4">
+          <source src="video/demo.webm" type="video/webm">
+          <a href="video/demo.mp4">Download the video</a>
+        </video>
+        <figcaption>Highlights from one full run in the test browser, with Timing set 90 ms earlier for it: 99%, 2346 of 2354 notes. No sound, because the test browser cannot play the song's video.</figcaption>
+      </figure>
+    </div>
+  </section>
 
   <section aria-labelledby="glance">
     <div class="wrap">

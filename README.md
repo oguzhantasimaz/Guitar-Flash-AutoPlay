@@ -10,6 +10,11 @@ Windows display scaling (100% – 200%) and on multi-monitor setups. It also
 measures how fast the notes scroll, so the timing is right on every
 difficulty.
 
+<p align="center"><a href="https://guitarflash.oguzhantasimaz.com/#watch"><img src="assets/demo.gif" alt="The app playing Through the Fire and Flames on Expert" width="720"></a></p>
+<p align="center"><em>Through the Fire and Flames on Expert.
+<a href="https://guitarflash.oguzhantasimaz.com/#watch">Watch the highlights</a> (73 s, from one full run at 99%) or
+<a href="site/video/demo.mp4">download the video</a>.</em></p>
+
 <p align="center"><img src="assets/screenshot.png" alt="The app's window" width="360"></p>
 
 **Website and downloads:** <https://guitarflash.oguzhantasimaz.com/>

@@ -8,7 +8,7 @@ Key facts:
 - Price: free. Support the author: https://buymeacoffee.com/oguzhantasimaz
 - No screen setup: it finds the five fret rings itself and measures every distance in fret spacings, so it works at any resolution, browser zoom, Retina/HiDPI screen and Windows display scaling.
 - It measures how fast the notes scroll while playing, so it needs no setting per difficulty.
-- Results on the real game, Expert: Through the Fire and Flames (DragonForce) 98%, 2314 notes hit; Breakthrough 99%, 507 of 508.
+- Results on the real game, Expert, default settings: Through the Fire and Flames (DragonForce) 99%, 2350 of 2354 notes; Breakthrough 99%, 507 of 508.
 - Default keys A, S, J, K, L (the game's defaults); game style Tap.
 - Not affiliated with Guitar Flash or gamesX.
 

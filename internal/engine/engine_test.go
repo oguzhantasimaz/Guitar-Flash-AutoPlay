@@ -14,6 +14,9 @@ type song struct {
 	notes []note
 	fps   float64
 	flash []span // times at which the screen flashes white
+	// unseen are notes the upper sensor misses altogether, the way a gem
+	// can get lost in a dense run.
+	unseen map[int]bool
 }
 
 type note struct {
@@ -79,15 +82,15 @@ const columnAbove, columnBelow = 0.45, 0.2
 // gems returns what a sensor column around height line sees at time t: the
 // leading edges of the gem bodies in view, lowest first. A body that sticks
 // out of the bottom of the column is left out.
-func (s song) gems(lane int, line float64, t time.Duration) []float64 {
+func (s song) gems(lane int, line float64, t time.Duration, upper bool) []float64 {
 	if s.flashing(t) {
 		return nil
 	}
 	frame := time.Duration(math.Floor(t.Seconds()*s.fps) / s.fps * float64(time.Second))
 	lo, hi := line-columnBelow, line+columnAbove
 	var out []float64
-	for _, n := range s.notes {
-		if n.lane != lane {
+	for i, n := range s.notes {
+		if n.lane != lane || (upper && s.unseen[i]) {
 			continue
 		}
 		c := s.height((n.hit - frame).Seconds())
@@ -105,8 +108,8 @@ func (s song) gems(lane int, line float64, t time.Duration) []float64 {
 func (s song) reading(p Params, t time.Duration) Reading {
 	r := Reading{Flash: s.flashing(t)}
 	for k := 0; k < 5; k++ {
-		r.Upper[k] = s.gems(k, p.Upper, t)
-		r.Lower[k] = s.gems(k, p.Lower, t)
+		r.Upper[k] = s.gems(k, p.Upper, t, true)
+		r.Lower[k] = s.gems(k, p.Lower, t, false)
 		r.Tail[k] = s.sensor(k, p.Lower, t)
 	}
 	return r
@@ -263,6 +266,55 @@ func TestDenseStream(t *testing.T) {
 	p := testParams()
 	acts := s.play(p, ms(4), ms(3500))
 	checkPresses(t, s, p, acts)
+}
+
+func TestLostGemInAStream(t *testing.T) {
+	// A long run on one lane where the upper sensor loses one gem: the
+	// next lower crossings could be paired with the wrong upper ones, which
+	// once made the measured speed run away to twice the real one.
+	for _, every := range []int{75, 130} {
+		s := song{speed: 3.2, fps: 30, unseen: map[int]bool{5: true, 23: true}}
+		for i := 0; i < 50; i++ {
+			s.notes = append(s.notes, note{2, at(1000, every, i), 0})
+		}
+		p := testParams()
+		e := New(p)
+		start := time.Unix(0, 0)
+		var acts []timed
+		for tm := time.Duration(0); tm < ms(1500+50*every); tm += ms(4) {
+			for _, a := range e.Update(start.Add(tm), s.reading(p, tm)) {
+				acts = append(acts, timed{a.At.Sub(start), a})
+			}
+		}
+		if v, _ := e.Speed(); math.Abs(v-3.2) > 0.1*3.2 {
+			t.Errorf("every %d ms: measured speed %.2f, want 3.2", every, v)
+		}
+		checkPresses(t, s, p, acts)
+	}
+}
+
+func TestKeyComesUpBetweenNotes(t *testing.T) {
+	// In a fast run the key must be up for a while before each press, or a
+	// game that looks at the keys once per frame misses the second note.
+	s := song{speed: 3.5, fps: 30}
+	for i := 0; i < 24; i++ {
+		s.notes = append(s.notes, note{1, at(1000, 70, i), 0})
+	}
+	p := testParams()
+	acts := s.play(p, ms(4), ms(3500))
+	sort.SliceStable(acts, func(i, j int) bool { return acts[i].at < acts[j].at })
+	lastUp := time.Duration(-1)
+	downs := 0
+	for _, a := range acts {
+		if !a.Down {
+			lastUp = a.at
+			continue
+		}
+		if downs > 0 && a.at-lastUp < ms(15) {
+			t.Errorf("press at %v only %v after the key came up", a.at, a.at-lastUp)
+		}
+		downs++
+	}
 }
 
 func TestHoldsSustains(t *testing.T) {

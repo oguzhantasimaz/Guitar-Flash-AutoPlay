@@ -10,6 +10,11 @@ Windows display scaling (100% – 200%) and on multi-monitor setups. It also
 measures how fast the notes scroll, so the timing is right on every
 difficulty.
 
+<p align="center"><a href="https://guitarflash.oguzhantasimaz.com/#watch"><img src="assets/demo.gif" alt="The app playing Through the Fire and Flames on Expert" width="720"></a></p>
+<p align="center"><em>Through the Fire and Flames on Expert.
+<a href="https://guitarflash.oguzhantasimaz.com/#watch">Watch the highlights</a> (73 s, from one full run at 99%) or
+<a href="site/video/demo.mp4">download the video</a>.</em></p>
+
 <p align="center"><img src="assets/screenshot.png" alt="The app's window" width="360"></p>
 
 **Website and downloads:** <https://guitarflash.oguzhantasimaz.com/>
@@ -166,9 +171,15 @@ white flash of special effects ([`internal/engine`](internal/engine)).
 
 These numbers were measured by running the app against the real game in a
 browser and timing notes frame by frame. With them it plays whole songs on
-Expert: *Breakthrough* at 99% (507 of 508 notes) and *Through the Fire and
-Flames* at 97% (2293 notes hit), in a browser that only managed about 30
-frames per second.
+Expert: *Through the Fire and Flames* at 99% (2350 of 2354 notes) and
+*Breakthrough* at 99% (507 of 508 notes), in a test browser without a
+graphics card that draws only about 40–50 frames per second.
+
+How early the key has to go down depends a little on the computer. The
+game moves its notes a fixed step per drawn frame, so on a browser that
+draws slowly they fall behind the music and the best moment to press
+shifts. If notes are hit a little early or late, move the **Timing** slider
+(or use `-offset`).
 
 **Resolution and DPI details.** On Windows the app declares itself DPI aware,
 so screenshots and coordinates are real pixels even at 150% scaling. On

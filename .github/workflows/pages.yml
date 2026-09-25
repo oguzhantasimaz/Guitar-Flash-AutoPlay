@@ -1,6 +1,7 @@
 # Publishes the website in site/ to GitHub Pages:
-# https://oguzhantasimaz.github.io/Guitar-Flash-AutoPlay/
-# In the repository settings, Pages > Source has to be "GitHub Actions".
+# https://guitarflash.oguzhantasimaz.com/
+# In the repository settings, Pages > Source has to be "GitHub Actions"; the
+# custom domain is set there too (no CNAME file is needed with Actions).
 name: pages
 
 on:

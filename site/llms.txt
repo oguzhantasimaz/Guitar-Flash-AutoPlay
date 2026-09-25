@@ -22,7 +22,7 @@ Key facts:
 
 ## Links
 
-- [Website](https://oguzhantasimaz.github.io/Guitar-Flash-AutoPlay/)
+- [Website](https://guitarflash.oguzhantasimaz.com/)
 - [Download for Windows x64](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/releases/latest/download/guitarflash-autoplay-windows-x64.zip)
 - [Download for Windows ARM64](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/releases/latest/download/guitarflash-autoplay-windows-arm64.zip)
 - [Download for macOS](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/releases/latest/download/guitarflash-autoplay-macos.zip)

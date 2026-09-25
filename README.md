@@ -12,7 +12,7 @@ difficulty.
 
 <p align="center"><img src="assets/screenshot.png" alt="The app's window" width="360"></p>
 
-**Website and downloads:** <https://oguzhantasimaz.github.io/Guitar-Flash-AutoPlay/>
+**Website and downloads:** <https://guitarflash.oguzhantasimaz.com/>
 · [Watch it play on YouTube](https://youtube.com/shorts/noo72JP1h3k?feature=share "Working Example")
 
 <a href="https://buymeacoffee.com/oguzhantasimaz"><img src="site/img/bmc-button.png" alt="Buy me a coffee" height="44"></a>

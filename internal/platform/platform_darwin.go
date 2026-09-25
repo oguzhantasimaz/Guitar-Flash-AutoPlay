@@ -121,6 +121,7 @@ import "C"
 import (
 	"fmt"
 	"image"
+	"os/exec"
 	"unsafe"
 )
 
@@ -186,15 +187,17 @@ func Check(prompt, keys bool) []Problem {
 	if C.gf_screen_recording(boolInt(prompt)) == 0 {
 		ps = append(ps, Problem{
 			What: "Screen Recording permission is missing, so the game cannot be seen.",
-			Fix: "Open System Settings > Privacy & Security > Screen & System Audio Recording, " +
-				"turn on your terminal app (Terminal, iTerm, ...), then quit and reopen the terminal.",
+			Fix: "In System Settings > Privacy & Security > Screen & System Audio Recording, " +
+				"turn on Guitar Flash AutoPlay (or your terminal app if you started it from a terminal), then restart it.",
+			Settings: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
 		})
 	}
 	if keys && C.gf_accessibility(boolInt(prompt)) == 0 {
 		ps = append(ps, Problem{
 			What: "Accessibility permission is missing, so key presses would be ignored.",
-			Fix: "Open System Settings > Privacy & Security > Accessibility, " +
-				"turn on your terminal app (Terminal, iTerm, ...), then quit and reopen the terminal.",
+			Fix: "In System Settings > Privacy & Security > Accessibility, " +
+				"turn on Guitar Flash AutoPlay (or your terminal app if you started it from a terminal), then restart it.",
+			Settings: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
 		})
 	}
 	return ps
@@ -209,3 +212,14 @@ func boolInt(b bool) C.int {
 
 // PauseBeforeExit does nothing on macOS: Terminal keeps the window open.
 func PauseBeforeExit() {}
+
+// OpenSettings opens the System Settings page where p is fixed.
+func OpenSettings(p Problem) error {
+	if p.Settings == "" {
+		return fmt.Errorf("no settings page for this problem")
+	}
+	return exec.Command("open", p.Settings).Start()
+}
+
+// UseParentConsole does nothing here: programs always have their terminal.
+func UseParentConsole() {}

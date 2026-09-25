@@ -2,7 +2,10 @@
 
 package platform
 
-import "image"
+import (
+	"fmt"
+	"image"
+)
 
 // Displays is not supported on this system.
 func Displays() ([]image.Rectangle, error) { return nil, ErrUnsupported }
@@ -31,3 +34,10 @@ func Check(prompt, keys bool) []Problem {
 
 // PauseBeforeExit does nothing on this system.
 func PauseBeforeExit() {}
+
+// OpenSettings does nothing here: no problem on this system has a settings
+// page.
+func OpenSettings(p Problem) error { return fmt.Errorf("no settings page for this problem") }
+
+// UseParentConsole does nothing here: programs always have their terminal.
+func UseParentConsole() {}

@@ -24,6 +24,7 @@ var (
 	procSetDpiAwareness    = shcore.NewProc("SetProcessDpiAwareness")
 	kernel32               = syscall.NewLazyDLL("kernel32.dll")
 	procGetConsoleProcs    = kernel32.NewProc("GetConsoleProcessList")
+	procAttachConsole      = kernel32.NewProc("AttachConsole")
 )
 
 func init() {
@@ -137,5 +138,25 @@ func PauseBeforeExit() {
 	if n, _, _ := procGetConsoleProcs.Call(uintptr(unsafe.Pointer(&ids[0])), 2); n == 1 {
 		fmt.Print("\nPress Enter to close this window...")
 		bufio.NewReader(os.Stdin).ReadString('\n')
+	}
+}
+
+// OpenSettings does nothing here: no problem on this system has a settings
+// page.
+func OpenSettings(p Problem) error { return fmt.Errorf("no settings page for this problem") }
+
+// UseParentConsole lets the windowed build (which has no console of its
+// own) print to the terminal it was started from, when it is used on the
+// command line.
+func UseParentConsole() {
+	const attachParentProcess = ^uintptr(0)
+	if ok, _, _ := procAttachConsole.Call(attachParentProcess); ok == 0 {
+		return // already has a console, or was not started from one
+	}
+	if f, err := os.OpenFile("CONOUT$", os.O_WRONLY, 0); err == nil {
+		os.Stdout, os.Stderr = f, f
+	}
+	if f, err := os.OpenFile("CONIN$", os.O_RDONLY, 0); err == nil {
+		os.Stdin = f
 	}
 }

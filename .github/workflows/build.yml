@@ -26,6 +26,12 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: stable
+      - name: Install the window toolkit's Linux libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev \
+            libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
       - run: go vet ./...
       - run: go test ./...
       - name: Screen capture smoke test
@@ -35,6 +41,26 @@ jobs:
         env:
           GF_SCREEN_TEST: "1"
         run: go test -run CaptureSmoke -v ./internal/platform
+      - name: Open the window and take a screenshot
+        if: runner.os != 'Linux'
+        continue-on-error: true
+        shell: bash
+        env:
+          GF_SCREEN_TEST: "1"
+          GF_SCREEN_OUT: ${{ github.workspace }}/window-${{ runner.os }}.png
+        run: |
+          go build -o gfa-smoke ./cmd/guitarflash-autoplay
+          ./gfa-smoke &
+          pid=$!
+          sleep 8
+          go test -count=1 -run CaptureSmoke ./internal/platform
+          kill $pid || true
+      - uses: actions/upload-artifact@v4
+        if: runner.os != 'Linux'
+        with:
+          name: window-screenshot-${{ runner.os }}
+          path: window-${{ runner.os }}.png
+          if-no-files-found: ignore
 
   build-windows:
     needs: test
@@ -51,6 +77,8 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: stable
+      - name: Embed the icon and manifest
+        run: go run github.com/tc-hib/go-winres@v0.3.3 make --in assets/winres.json --out cmd/guitarflash-autoplay/rsrc --arch ${{ matrix.goarch }}
       - name: Build
         env:
           GOOS: windows
@@ -59,10 +87,15 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME}"
           [[ "$GITHUB_REF" == refs/tags/* ]] || VERSION="dev-${GITHUB_SHA::7}"
-          mkdir -p "dist/guitarflash-autoplay-${{ matrix.name }}"
+          out="dist/guitarflash-autoplay-${{ matrix.name }}"
+          mkdir -p "$out"
+          # The app with its window (no console), and the same program for
+          # the command line.
+          go build -trimpath -ldflags "-s -w -H windowsgui -X main.version=${VERSION}" \
+            -o "$out/Guitar Flash AutoPlay.exe" ./cmd/guitarflash-autoplay
           go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" \
-            -o "dist/guitarflash-autoplay-${{ matrix.name }}/guitarflash-autoplay.exe" ./cmd/guitarflash-autoplay
-          cp README.md LICENSE "dist/guitarflash-autoplay-${{ matrix.name }}/"
+            -o "$out/guitarflash-autoplay.exe" ./cmd/guitarflash-autoplay
+          cp README.md LICENSE "$out/"
           cd dist && zip -r "guitarflash-autoplay-${{ matrix.name }}.zip" "guitarflash-autoplay-${{ matrix.name }}"
       - uses: actions/upload-artifact@v4
         with:
@@ -93,8 +126,25 @@ jobs:
           codesign --force --sign - "$out/guitarflash-autoplay"
           lipo -info "$out/guitarflash-autoplay"
           "$out/guitarflash-autoplay" -version
+
+          # The app bundle: double-click to open the window.
+          app="$out/Guitar Flash AutoPlay.app"
+          mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+          cp "$out/guitarflash-autoplay" "$app/Contents/MacOS/"
+          sed "s/VERSION/${VERSION#v}/g" assets/Info.plist > "$app/Contents/Info.plist"
+          plutil -lint "$app/Contents/Info.plist"
+          iconset=build/icon.iconset
+          mkdir -p "$iconset"
+          for s in 16 32 128 256 512; do
+            sips -z $s $s assets/icon.png --out "$iconset/icon_${s}x${s}.png" >/dev/null
+            sips -z $((s*2)) $((s*2)) assets/icon.png --out "$iconset/icon_${s}x${s}@2x.png" >/dev/null
+          done
+          iconutil -c icns "$iconset" -o "$app/Contents/Resources/icon.icns"
+          codesign --force --deep --sign - "$app"
+          codesign --verify --verbose "$app"
+
           cp README.md LICENSE "$out/"
-          cd dist && zip -r guitarflash-autoplay-macos.zip guitarflash-autoplay-macos
+          cd dist && zip -r -y guitarflash-autoplay-macos.zip guitarflash-autoplay-macos
       - uses: actions/upload-artifact@v4
         with:
           name: guitarflash-autoplay-macos

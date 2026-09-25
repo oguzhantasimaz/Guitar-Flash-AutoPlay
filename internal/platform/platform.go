@@ -101,4 +101,7 @@ func ParseKey(name string) (Key, error) {
 // instructions on how to do it.
 type Problem struct {
 	What, Fix string
+	// Settings, if set, opens the system settings page where it is fixed
+	// (see OpenSettings).
+	Settings string
 }

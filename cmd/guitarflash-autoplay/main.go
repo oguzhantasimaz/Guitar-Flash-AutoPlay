@@ -1,9 +1,8 @@
 // Command guitarflash-autoplay plays Guitar Flash (guitarflash.com) by
 // watching the screen and pressing the fret keys.
 //
-// It finds the fretboard on its own, so it works at any screen resolution,
-// browser zoom or display scaling. Run it, open a song in the browser and
-// click on the game so it gets the keyboard.
+// Started without arguments (e.g. by double-clicking it) it opens a window.
+// With flags it runs in the terminal; see -h.
 package main
 
 import (
@@ -15,39 +14,46 @@ import (
 	"image"
 	"image/draw"
 	_ "image/jpeg"
-	"image/png"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/internal/engine"
 	"github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/internal/platform"
+	"github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/internal/player"
+	"github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/internal/ui"
 	"github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/internal/vision"
 )
 
 var version = "dev"
 
-type options struct {
-	keys      [5]platform.Key
-	params    engine.Params
-	poll      time.Duration
-	display   int
-	frets     *vision.Board
-	calibrate bool
-	dryRun    bool
-	debug     bool
-}
-
 func main() {
+	if wantWindow(os.Args[1:]) {
+		ui.Run(version) // does not return
+	}
+	platform.UseParentConsole()
 	code := run()
 	if code != 0 {
 		platform.PauseBeforeExit()
 	}
 	os.Exit(code)
+}
+
+// wantWindow reports whether to open the window: when there are no
+// arguments, as when the app is double-clicked. (Old macOS versions pass a
+// -psn_ argument to apps opened from the Finder.)
+func wantWindow(args []string) bool {
+	for _, a := range args {
+		if !strings.HasPrefix(a, "-psn_") {
+			return false
+		}
+	}
+	return true
 }
 
 func run() int {
@@ -90,7 +96,11 @@ func run() int {
 		return 0
 	}
 
-	o := options{params: p, poll: *poll, display: *display, calibrate: *calibrate, dryRun: *dryRun, debug: *debug}
+	cfg := player.DefaultConfig()
+	cfg.Params, cfg.Poll, cfg.Display, cfg.DryRun = p, *poll, *display, *dryRun
+	if *debug {
+		cfg.DebugShot = "guitarflash-debug.png"
+	}
 	names := strings.Split(*keys, ",")
 	if len(names) != 5 {
 		fmt.Fprintf(os.Stderr, "error: -keys needs exactly 5 keys, got %q\n", *keys)
@@ -102,7 +112,7 @@ func run() int {
 			fmt.Fprintln(os.Stderr, "error:", err)
 			return 2
 		}
-		o.keys[i] = k
+		cfg.Keys[i] = k
 	}
 	if *frets != "" {
 		b, err := parseFrets(*frets)
@@ -110,10 +120,10 @@ func run() int {
 			fmt.Fprintln(os.Stderr, "error:", err)
 			return 2
 		}
-		o.frets = &b
+		cfg.Board = &b
 	}
 
-	if problems := platform.Check(true, !o.dryRun); len(problems) > 0 {
+	if problems := platform.Check(true, !cfg.DryRun); len(problems) > 0 {
 		for _, pr := range problems {
 			fmt.Fprintf(os.Stderr, "%s\n  -> %s\n", pr.What, pr.Fix)
 		}
@@ -122,7 +132,7 @@ func run() int {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if err := play(ctx, o); err != nil && !errors.Is(err, context.Canceled) {
+	if err := play(ctx, cfg, *calibrate, *debug); err != nil && !errors.Is(err, context.Canceled) {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1
 	}
@@ -149,213 +159,74 @@ func parseFrets(s string) (vision.Board, error) {
 	return vision.ManualBoard(image.Pt(v[0], v[1]), image.Pt(v[2], v[3])), nil
 }
 
-var errQuit = errors.New("stopped with the mouse")
+// cli prints what the player does to the terminal.
+type cli struct {
+	keys  [5]platform.Key
+	debug bool
+	mu    sync.Mutex
+	state player.State
+	notes int
+}
 
-func play(ctx context.Context, o options) error {
+func (c *cli) State(s player.State, b vision.Board) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.state == player.Playing && s != player.Playing && c.notes > 0 {
+		fmt.Printf("%d notes played.\n", c.notes)
+	}
+	c.state = s
+	switch s {
+	case player.Starting:
+		fmt.Println("Click on the game window now. Starting in 3 seconds...")
+	case player.Searching:
+		fmt.Println("\nLooking for the Guitar Flash fretboard... open a song and click on the game.")
+	case player.Playing:
+		c.notes = 0
+		fmt.Printf("Found the fretboard: %s\n", b)
+	}
+}
+
+func (c *cli) Log(msg string) { fmt.Println(msg) }
+
+func (c *cli) Speed(v float64) { fmt.Printf("Note speed: %.1f fret spacings per second.\n", v) }
+
+func (c *cli) Key(lane int, down bool) {
+	if !down {
+		return
+	}
+	c.mu.Lock()
+	c.notes++
+	c.mu.Unlock()
+	if c.debug {
+		fmt.Printf("  press %-6s %s\n", vision.FretColors[lane], c.keys[lane].Name)
+	}
+}
+
+func (c *cli) Preview(*image.RGBA) {}
+
+func play(ctx context.Context, cfg player.Config, calibrateFirst, debug bool) error {
 	fmt.Printf("Guitar Flash AutoPlay %s\n", version)
-	fmt.Printf("Keys: %s  (change with -keys to match the game's \"Setting Keys\")\n", keyNames(o.keys))
-	if o.dryRun {
+	fmt.Printf("Keys: %s  (change with -keys to match the game's \"Setting Keys\")\n", keyNames(cfg.Keys))
+	if cfg.DryRun {
 		fmt.Println("Dry run: no keys will be pressed.")
 	}
 	fmt.Println("Stop with Ctrl+C, or move the mouse to the top-left corner of the screen.")
-
-	manual := o.frets
-	if o.calibrate {
+	if calibrateFirst {
 		b, err := calibrate()
 		if err != nil {
 			return err
 		}
-		manual = &b
+		cfg.Board = &b
 	}
-
-	if manual == nil {
-		// Give the user a moment to switch to the browser, so the keys do
-		// not end up in this terminal.
-		fmt.Println("Click on the game window now. Starting in 3 seconds...")
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(3 * time.Second):
-		}
+	if cfg.Board != nil {
+		cfg.StartDelay = 0 // calibrating already ends with a click on the game
 	}
-
-	eng := engine.New(o.params)
-	for {
-		var board vision.Board
-		if manual != nil {
-			board = *manual
-		} else {
-			fmt.Println("\nLooking for the Guitar Flash fretboard... open a song and click on the game.")
-			var err error
-			if board, err = findBoard(ctx, o); err != nil {
-				return err
-			}
-		}
-		fmt.Printf("Found the fretboard: %s\n", board)
-		err := follow(ctx, o, eng, board, manual == nil)
-		if err != nil {
-			if errors.Is(err, errQuit) {
-				fmt.Println("\nMouse in the top-left corner: stopping.")
-				return nil
-			}
-			return err
-		}
-		fmt.Println("The fretboard is gone (song over, or the page moved).")
-	}
-}
-
-// findBoard searches the displays until the fretboard shows up at the same
-// place twice in a row, so a board that is still sliding in is not used.
-func findBoard(ctx context.Context, o options) (vision.Board, error) {
-	var last *vision.Board
-	start := time.Now()
-	hinted := false
-	failures := 0
-	for {
-		displays, err := platform.Displays()
-		if err != nil {
-			return vision.Board{}, err
-		}
-		var found *vision.Board
-		var shot *image.RGBA
-		for i, d := range displays {
-			if o.display >= 0 && i != o.display {
-				continue
-			}
-			img, err := platform.Capture(d)
-			if err != nil {
-				// Displays can come and go (sleep, unplugging); only give up
-				// when capturing keeps failing.
-				if failures++; failures > 20 {
-					return vision.Board{}, fmt.Errorf("capturing display %d: %w", i, err)
-				}
-				continue
-			}
-			failures = 0
-			if b, err := vision.FindBoard(img); err == nil {
-				found, shot = &b, img
-				break
-			}
-		}
-		if found != nil && last != nil && same(*found, *last) {
-			if o.debug {
-				saveDebug(shot, *found, o.params)
-			}
-			return *found, nil
-		}
-		last = found
-		if !hinted && time.Since(start) > 30*time.Second {
-			hinted = true
-			fmt.Println("Still looking. Make sure the whole fretboard is visible and not covered.")
-			fmt.Println("If it never gets found, run with -calibrate to point at the frets yourself.")
-		}
-		select {
-		case <-ctx.Done():
-			return vision.Board{}, ctx.Err()
-		case <-time.After(300 * time.Millisecond):
-		}
-	}
-}
-
-func same(a, b vision.Board) bool {
-	tol := 0.03 * a.Spacing
-	return abs(a.X0-b.X0) < tol && abs(a.Y-b.Y) < tol && abs(a.Spacing-b.Spacing) < tol
-}
-
-type keyboard struct {
-	keys   [5]platform.Key
-	dryRun bool
-}
-
-func (k keyboard) Key(lane int, down bool) error {
-	if k.dryRun {
+	err := player.Run(ctx, cfg, &cli{keys: cfg.Keys, debug: debug})
+	if errors.Is(err, player.ErrMouseStop) {
+		fmt.Println("\nMouse in the top-left corner: stopping.")
 		return nil
 	}
-	if down {
-		return platform.KeyDown(k.keys[lane])
-	}
-	return platform.KeyUp(k.keys[lane])
-}
-
-// follow plays until the board disappears or the context is cancelled.
-func follow(ctx context.Context, o options, eng *engine.Engine, board vision.Board, checkBoard bool) error {
-	p := o.params
-	upper, lower := vision.NewLine(board, p.Upper), vision.NewLine(board, p.Lower)
-	region := upper.Bounds().Union(lower.Bounds()).Inset(-2)
-	rings := image.Rect(
-		int(board.FretX(0)-board.RingW), int(board.Y-board.RingH),
-		int(board.FretX(4)+board.RingW)+1, int(board.Y+board.RingH)+1)
-
-	var notes int
-	sched := engine.NewScheduler(keyboard{o.keys, o.dryRun}, func(a engine.Action, late time.Duration, err error) {
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "key %s: %v\n", o.keys[a.Lane].Name, err)
-			return
-		}
-		if o.debug && a.Down {
-			fmt.Printf("  press %-6s %-3s late %v\n", vision.FretColors[a.Lane], o.keys[a.Lane].Name, late.Round(time.Millisecond))
-		}
-	})
-	eng.Reset()
-	// Stop drops pending presses and lifts every key that is still down.
-	defer sched.Stop()
-
-	ticker := time.NewTicker(o.poll)
-	defer ticker.Stop()
-	lastSeen, lastCheck, lastStatus := time.Now(), time.Now(), time.Now()
-	var failures int
-	measured := false
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-ticker.C:
-		}
-		t := time.Now()
-		img, err := platform.Capture(region)
-		if err != nil {
-			if failures++; failures > 50 {
-				return fmt.Errorf("screen capture keeps failing: %w", err)
-			}
-			continue
-		}
-		failures = 0
-		up, flashU := upper.Read(img)
-		low, flashL := lower.Read(img)
-		acts := eng.Update(t, up, low, flashU || flashL)
-		for _, a := range acts {
-			if a.Down {
-				notes++
-			}
-		}
-		sched.Add(acts)
-
-		if v, ok := eng.Speed(); ok && !measured {
-			measured = true
-			fmt.Printf("Note speed: %.1f fret spacings per second.\n", v)
-		}
-		if t.Sub(lastStatus) > 10*time.Second && notes > 0 {
-			lastStatus = t
-			v, _ := eng.Speed()
-			fmt.Printf("%d notes played (speed %.1f).\n", notes, v)
-		}
-
-		if t.Sub(lastCheck) < 250*time.Millisecond {
-			continue
-		}
-		lastCheck = t
-		if c, err := platform.Cursor(); err == nil && c.X <= 2 && c.Y <= 2 {
-			return errQuit
-		}
-		if !checkBoard {
-			continue
-		}
-		if img, err := platform.Capture(rings); err == nil && board.Present(img) {
-			lastSeen = t
-		} else if t.Sub(lastSeen) > 3*time.Second {
-			return nil
-		}
-	}
+	return err
 }
 
 func calibrate() (vision.Board, error) {
@@ -413,33 +284,11 @@ func analyzeFile(path string, p engine.Params) error {
 		fmt.Println()
 	}
 	out := strings.TrimSuffix(path, filepath.Ext(path)) + "-debug.png"
-	if err := writeOverlay(out, img, board, p); err != nil {
+	if err := player.WriteOverlay(out, img, board, p); err != nil {
 		return err
 	}
 	fmt.Println("Saved", out)
 	return nil
-}
-
-func saveDebug(img *image.RGBA, b vision.Board, p engine.Params) {
-	out := "guitarflash-debug.png"
-	if err := writeOverlay(out, img, b, p); err != nil {
-		fmt.Fprintln(os.Stderr, "debug screenshot:", err)
-		return
-	}
-	fmt.Println("Saved what was detected to", out)
-}
-
-func writeOverlay(path string, img *image.RGBA, b vision.Board, p engine.Params) error {
-	vision.DrawOverlay(img, b, vision.NewLine(b, p.Upper), vision.NewLine(b, p.Lower))
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	if err := png.Encode(f, img); err != nil {
-		f.Close()
-		return err
-	}
-	return f.Close()
 }
 
 func keyNames(keys [5]platform.Key) string {
@@ -448,11 +297,4 @@ func keyNames(keys [5]platform.Key) string {
 		s = append(s, k.Name)
 	}
 	return strings.Join(s, " ")
-}
-
-func abs(x float64) float64 {
-	if x < 0 {
-		return -x
-	}
-	return x
 }

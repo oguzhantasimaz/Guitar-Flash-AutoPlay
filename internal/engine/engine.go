@@ -114,6 +114,9 @@ func (e *Engine) Update(t time.Time, upper, lower [5]float64, flash bool) []Acti
 	for k := 0; k < 5; k++ {
 		for _, ev := range e.upper[k].update(t, upper[k], cfg) {
 			if ev.start {
+				if len(e.queue[k]) >= 16 {
+					e.queue[k] = e.queue[k][1:] // the lower line missed these
+				}
 				e.queue[k] = append(e.queue[k], ev.at)
 			}
 		}

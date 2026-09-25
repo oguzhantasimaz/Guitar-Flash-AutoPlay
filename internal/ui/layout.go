@@ -78,7 +78,8 @@ func (u *UI) layout(gtx C) D {
 		func(gtx C) D { return u.logCard(gtx, st) },
 		func(gtx C) D {
 			return label(gtx, u.th, 12, colMuted, "Stop any time: move the mouse to the top-left corner of the screen.\n"+
-				"Guitar Flash AutoPlay "+u.version+" · github.com/oguzhantasimaz/Guitar-Flash-AutoPlay")
+				"Guitar Flash AutoPlay "+u.version+" · since 2020\n"+
+				"github.com/oguzhantasimaz/Guitar-Flash-AutoPlay")
 		},
 	)
 	gap := layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout)

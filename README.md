@@ -237,10 +237,25 @@ git tag v3.0.0 && git push origin v3.0.0
 
 ## History
 
-- **v3**: rewritten as a cross-platform app with a window, automatic
-  fretboard detection, resolution/DPI support and measured note speed.
-- **v2**: Go version with hard-coded coordinates for one screen.
-- **v1**: Python version.
+I first wrote this bot at university in March 2020, back before AI could
+write code for you. It meant a lot to me then, and I always wanted to come
+back and build it properly.
+
+- **v1, March 2020: Python.** One file of about 50 lines
+  ([`guitarflash.py`](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/blob/6c6fba1/guitarflash.py)), committed just after midnight and signed
+  `#OĞUZHAN TAŞIMAZ 29.03.2020`. It grabbed a strip of a 1920×1080 screen,
+  checked one pixel above each fret and pressed the key when it turned
+  bright. It only worked at that resolution, with the browser at 100% zoom.
+- **v2, September 2023: Go.** The same idea, smoother
+  ([`main.go`](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/blob/d5bd080/main.go), [video](https://youtube.com/shorts/noo72JP1h3k)): one
+  goroutine per lane, a fixed 100 ms wait before each key and a check that
+  skips the white flashes. The coordinates still had to be edited by hand
+  for every screen.
+- **v3, September 2026: rebuilt from scratch** as the app I always wanted it
+  to be: a window for Windows and macOS that finds the fretboard on any
+  screen, measures the note speed and follows every gem. This time I built
+  it together with an AI pair programmer. The core idea is still v1's: watch
+  the frets, and press when a note arrives.
 
 Feel free to contribute! If the app is useful to you, you can
 [buy me a coffee](https://buymeacoffee.com/oguzhantasimaz).

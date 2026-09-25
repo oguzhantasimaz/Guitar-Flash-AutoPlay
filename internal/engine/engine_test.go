@@ -293,6 +293,30 @@ func TestLostGemInAStream(t *testing.T) {
 	}
 }
 
+func TestKeyComesUpBetweenNotes(t *testing.T) {
+	// In a fast run the key must be up for a while before each press, or a
+	// game that looks at the keys once per frame misses the second note.
+	s := song{speed: 3.5, fps: 30}
+	for i := 0; i < 24; i++ {
+		s.notes = append(s.notes, note{1, at(1000, 70, i), 0})
+	}
+	p := testParams()
+	acts := s.play(p, ms(4), ms(3500))
+	sort.SliceStable(acts, func(i, j int) bool { return acts[i].at < acts[j].at })
+	lastUp := time.Duration(-1)
+	downs := 0
+	for _, a := range acts {
+		if !a.Down {
+			lastUp = a.at
+			continue
+		}
+		if downs > 0 && a.at-lastUp < ms(15) {
+			t.Errorf("press at %v only %v after the key came up", a.at, a.at-lastUp)
+		}
+		downs++
+	}
+}
+
 func TestHoldsSustains(t *testing.T) {
 	s := song{speed: 8, fps: 60, notes: []note{
 		{1, ms(1000), ms(600)},

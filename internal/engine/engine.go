@@ -282,18 +282,23 @@ func spread(vs []float64, m float64) float64 {
 }
 
 // releaseGap is how long a key is let go before the same key is pressed for
-// the next note.
-const releaseGap = 12 * time.Millisecond
+// the next note: about a frame of the game, so it sees the key come up even
+// if it only looks at the keys once per frame.
+const releaseGap = 20 * time.Millisecond
 
 func (e *Engine) press(k int, t time.Time) []Action {
 	at := t.Add(e.delay())
 	var acts []Action
-	if e.down[k] {
-		// Still holding a sustain; lift the key just before the next note.
-		up := at.Add(-releaseGap)
-		if earliest := e.downAt[k].Add(e.p.MinPress); up.Before(earliest) {
-			up = earliest
-		}
+	// Lift the key a moment before this press. It may still be held for a
+	// sustain, or its release may be due too late: in a fast run the gems
+	// almost touch, and the release that follows one gem out of the sensor
+	// would leave the key up for only a few milliseconds. That later
+	// release still happens, before this press, and does nothing.
+	up := at.Add(-releaseGap)
+	if earliest := e.downAt[k].Add(e.p.MinPress); up.Before(earliest) {
+		up = earliest
+	}
+	if e.down[k] || e.lastUp[k].After(up) {
 		acts = append(acts, e.forceUp(k, up))
 	}
 	if earliest := e.lastUp[k].Add(releaseGap / 2); at.Before(earliest) {

@@ -82,15 +82,16 @@ type Reading struct {
 // Engine consumes one reading per captured frame. It is not safe for
 // concurrent use.
 type Engine struct {
-	p      Params
-	upper  [5]tracker
-	lower  [5]tracker
-	tails  [5]detector
-	queue  [5][]time.Time // upper-line crossings waiting for their lower one
-	travel estimate       // upper-to-lower travel time, in seconds
-	down   [5]bool
-	downAt [5]time.Time
-	lastUp [5]time.Time
+	p       Params
+	upper   [5]tracker
+	lower   [5]tracker
+	tails   [5]detector
+	queue   [5][]time.Time // upper-line crossings waiting for their lower one
+	travel  estimate       // upper-to-lower travel time, in seconds
+	misfits []float64      // recent travel times that did not fit it
+	down    [5]bool
+	downAt  [5]time.Time
+	lastUp  [5]time.Time
 }
 
 // New returns an engine with the given parameters.
@@ -187,6 +188,15 @@ func (e *Engine) forceUp(k int, t time.Time) Action {
 
 // measure pairs a lower-line crossing with the upper-line crossing of the
 // same note and records the travel time.
+//
+// Once the speed is known, a crossing is only paired (and used up) when its
+// travel time fits. If the upper sensor lost this note's gem in a fast run,
+// the best candidate is the next note's; using it up would shift every
+// pairing after it by one note, which once made the measured speed run away
+// to twice the real one. Left alone, the next note pairs correctly again. A
+// real change of speed (another song without the board ever leaving the
+// screen) shows up as misfits that keep coming and agree with each other,
+// and the estimate starts over from them.
 func (e *Engine) measure(k int, t time.Time) {
 	const minTravel = 15 * time.Millisecond
 	maxTravel := 1500 * time.Millisecond
@@ -200,32 +210,75 @@ func (e *Engine) measure(k int, t time.Time) {
 	for len(q) > 0 && t.Sub(q[0]) > maxTravel {
 		q = q[1:]
 	}
-	pick := -1
+	defer func() { e.queue[k] = q }()
+	if len(q) == 0 || t.Sub(q[0]) < minTravel {
+		return
+	}
+	dist := e.p.Upper - e.p.Lower
+	possible := func(d time.Duration) bool {
+		return d.Seconds() >= dist/maxSpeed && d.Seconds() <= dist
+	}
+	if expected == 0 {
+		// Without a speed yet, the oldest crossing is this note's. If that
+		// is wrong, the misfits that follow put it right.
+		d := t.Sub(q[0])
+		q = q[1:]
+		if possible(d) {
+			e.travel.add(d.Seconds())
+		}
+		return
+	}
+	pick, near := -1, 0
 	for i, tu := range q {
 		d := t.Sub(tu)
 		if d < minTravel {
 			break
 		}
-		// Without a speed yet, the oldest crossing is this note. With one,
-		// take the crossing that fits it best, so a single missed reading
-		// does not shift every pairing after it.
-		if pick < 0 || (expected > 0 && absDur(d-expected) < absDur(t.Sub(q[pick])-expected)) {
+		if absDur(d-expected) <= expected*2/5 {
+			near++
+		}
+		if pick < 0 || absDur(d-expected) < absDur(t.Sub(q[pick])-expected) {
 			pick = i
 		}
-		if expected == 0 {
-			break
+	}
+	d := t.Sub(q[pick])
+	if absDur(d-expected) > expected/4 {
+		e.misfit(d)
+		return
+	}
+	e.misfits = e.misfits[:0]
+	q = q[pick+1:]
+	// With another crossing almost as likely, the pairing is kept but not
+	// measured.
+	if near == 1 && possible(d) {
+		e.travel.add(d.Seconds())
+	}
+}
+
+// misfit notes a travel time that does not fit the estimate. Six in a row
+// that agree with each other mean the speed really changed.
+func (e *Engine) misfit(d time.Duration) {
+	e.misfits = append(e.misfits, d.Seconds())
+	if len(e.misfits) < 6 {
+		return
+	}
+	m := estimate{samples: e.misfits}
+	if v, _ := m.value(); spread(e.misfits, v) <= 0.1*v {
+		e.travel = estimate{samples: append([]float64(nil), e.misfits...)}
+		for k := range e.queue {
+			e.queue[k] = nil
 		}
 	}
-	if pick >= 0 {
-		// Only keep what is physically possible: between 1 and maxSpeed
-		// spacings per second.
-		d := t.Sub(q[pick]).Seconds()
-		if dist := e.p.Upper - e.p.Lower; d >= dist/maxSpeed && d <= dist {
-			e.travel.add(d)
-		}
-		q = q[pick+1:]
+	e.misfits = e.misfits[:0]
+}
+
+// spread is the largest distance of a value from m.
+func spread(vs []float64, m float64) float64 {
+	d := 0.0
+	for _, v := range vs {
+		d = math.Max(d, math.Abs(v-m))
 	}
-	e.queue[k] = q
+	return d
 }
 
 // releaseGap is how long a key is let go before the same key is pressed for
@@ -265,26 +318,15 @@ func (e *Engine) release(k int, t time.Time) []Action {
 	return []Action{e.forceUp(k, up)}
 }
 
-// estimate averages recent measurements, ignoring outliers from mismatched
-// notes. If the value really changes (a new song on another difficulty),
-// the outliers keep coming and it starts over.
+// estimate averages the most recent measurements.
 type estimate struct {
 	samples []float64
-	rejects int
 }
 
 func (s *estimate) add(v float64) {
 	if v <= 0 || math.IsInf(v, 0) || math.IsNaN(v) {
 		return
 	}
-	if med, ok := s.value(); ok && math.Abs(v-med) > 0.3*med {
-		s.rejects++
-		if s.rejects >= 6 {
-			s.samples, s.rejects = []float64{v}, 0
-		}
-		return
-	}
-	s.rejects = 0
 	s.samples = append(s.samples, v)
 	if len(s.samples) > 15 {
 		s.samples = s.samples[1:]

@@ -128,21 +128,25 @@ spacings above the frets, so a lane at height `h` is squeezed by
 
 ```
             \    \   |   /    /       the lanes meet 4.44 spacings up
-         ....\....\..|../..../....    upper sensor, 1.9 spacings above the frets
+         ....\....\..|../..../....    upper sensor line, 1.9 spacings above the frets
               \    \ | /    /
-          .....\....\|/..../.....     lower sensor, 1.05 spacings above the frets
+          .....\....\|/..../.....     lower sensor line, 1.05 spacings above the frets
                (G) (R) (Y) (B) (O)    fret rings, 1 spacing apart
 ```
 
-**3. Watch two sensor lines.** Above the frets the app reads two short
-horizontal strips across each lane, over a hundred times a second. It
-captures only those pixels, so each read is tiny and fast. A strip is
-"covered" by the pixels that have the lane's own colour (the gem) or are
-white (its cap). A gem covers about 90–100% of a strip, while the thin tail
-of a sustained note covers only 10–30%, which is how notes and tails are told
-apart. The sensors sit above the flame the game draws on a hit (it reaches
-0.8 spacings up), and a yellow flame on the green fret never counts as a green
-note anyway ([`internal/vision/sensor.go`](internal/vision/sensor.go)).
+**3. Follow every gem.** Around two sensor lines above the frets the app
+reads a short stretch of each lane, over a hundred times a second, capturing
+only those pixels. In every frame it finds the coloured body of each gem in
+view; the white cap and the dark highway keep neighbours apart, even in the
+fastest runs of *Through the Fire and Flames*, where the gems on one lane
+almost touch. Gems only ever move down, so from one frame to the next the
+app works out how far they moved and which gem is which, and notes the
+moment each gem's leading edge crosses a sensor line, interpolated between
+frames. The sensors sit above the flame the game draws on a hit (it reaches
+0.8 spacings up), and a separate strip on the lower line watches the thin
+tail of sustained notes to know how long to hold a key
+([`internal/vision/column.go`](internal/vision/column.go),
+[`internal/engine/tracker.go`](internal/engine/tracker.go)).
 
 **4. Measure the speed.** Every note crosses the upper sensor first and the
 lower one a moment later. That travel time, averaged over recent notes, says
@@ -158,8 +162,10 @@ earlier. The app holds the key while a sustain tail passes, and ignores the
 white flash of special effects ([`internal/engine`](internal/engine)).
 
 These numbers were measured by running the app against the real game in a
-browser and timing notes frame by frame; with them it plays a whole song on
-Expert at 99% (507 of 508 notes).
+browser and timing notes frame by frame. With them it plays whole songs on
+Expert: *Breakthrough* at 99% (507 of 508 notes) and *Through the Fire and
+Flames* at 97% (2293 notes hit), in a browser that only managed about 30
+frames per second.
 
 **Resolution and DPI details.** On Windows the app declares itself DPI aware,
 so screenshots and coordinates are real pixels even at 150% scaling. On

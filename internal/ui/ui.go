@@ -85,7 +85,7 @@ type UI struct {
 	done   chan struct{}
 
 	startBtn     widget.Clickable
-	coffeeBtn    widget.Clickable
+	coffee       coffeeButton
 	calibrateBtn widget.Clickable
 	autoBtn      widget.Clickable
 	settingsBtns [4]widget.Clickable
@@ -166,7 +166,7 @@ func (u *UI) handle(gtx C) {
 			u.start()
 		}
 	}
-	if u.coffeeBtn.Clicked(gtx) {
+	if u.coffee.click.Clicked(gtx) {
 		if err := platform.OpenURL(CoffeeURL); err != nil {
 			u.log("Could not open the browser: " + err.Error() + ". The page is " + CoffeeURL)
 		}

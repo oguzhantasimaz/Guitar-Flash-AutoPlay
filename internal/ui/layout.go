@@ -35,7 +35,6 @@ var (
 	colGood    = rgb(0x43c463)
 	colWait    = rgb(0xffb300)
 	colProblem = rgb(0x5a1f24)
-	colCoffee  = rgb(0xffdd00) // Buy Me a Coffee yellow
 
 	// The fret colours, as the game draws them.
 	fretColors = [5]color.NRGBA{rgb(0x0b9712), rgb(0xee0e0d), rgb(0xe1e214), rgb(0x1192e3), rgb(0xee6310)}
@@ -107,15 +106,7 @@ func (u *UI) header(gtx C) D {
 			l.Font.Weight = font.Bold
 			return l.Layout(gtx)
 		}),
-		layout.Rigid(func(gtx C) D {
-			b := material.Button(u.th, &u.coffeeBtn, "Buy me a coffee")
-			b.Background, b.Color = colCoffee, colBg
-			b.TextSize = 13
-			b.Font.Weight = font.SemiBold
-			b.CornerRadius = unit.Dp(14)
-			b.Inset = layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(12), Right: unit.Dp(12)}
-			return b.Layout(gtx)
-		}),
+		layout.Rigid(func(gtx C) D { return u.coffee.Layout(gtx, 36) }),
 	)
 }
 

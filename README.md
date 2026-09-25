@@ -14,7 +14,8 @@ difficulty.
 
 **Website and downloads:** <https://oguzhantasimaz.github.io/Guitar-Flash-AutoPlay/>
 · [Watch it play on YouTube](https://youtube.com/shorts/noo72JP1h3k?feature=share "Working Example")
-· [☕ Buy me a coffee](https://buymeacoffee.com/oguzhantasimaz)
+
+<a href="https://buymeacoffee.com/oguzhantasimaz"><img src="site/img/bmc-button.png" alt="Buy me a coffee" height="44"></a>
 
 > This is a fun project to show how screen-reading bots work. Please don't use
 > it to submit scores to the rankings or in multiplayer duels.

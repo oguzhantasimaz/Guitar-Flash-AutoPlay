@@ -110,7 +110,7 @@
 :root {
   --bg: #0f0f15; --panel: #1a1a24; --panel2: #22222f; --line: #2e2e3e;
   --text: #ececf1; --muted: #a3a3b8; --accent: #e53935; --accent2: #ff5a50;
-  --coffee: #ffdd00;
+  --coffee: #ffdd00; /* Buy Me a Coffee yellow */
   --green: #0b9712; --red: #ee0e0d; --yellow: #e1e214; --blue: #1192e3; --orange: #ee6310;
   --radius: 14px;
   color-scheme: dark;
@@ -132,19 +132,18 @@ header.top { position: sticky; top: 0; z-index: 10; background: rgba(15, 15, 21,
 header.top .wrap { display: flex; align-items: center; gap: 18px; height: 60px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); text-decoration: none; white-space: nowrap; }
 .brand img { width: 32px; height: 32px; }
-nav.links { display: flex; gap: 18px; margin-left: auto; font-size: 15px; }
+nav.links { display: flex; align-items: center; gap: 18px; margin-left: auto; font-size: 15px; }
 nav.links a { color: var(--muted); text-decoration: none; }
 nav.links a:hover { color: var(--text); }
-nav.links a.btn-coffee, nav.links a.btn-coffee:hover { color: #111; }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-weight: 650; text-decoration: none; border: 1px solid transparent; line-height: 1.2; }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { background: var(--accent2); color: #fff; }
 .btn-ghost { border-color: var(--line); color: var(--text); background: var(--panel); }
 .btn-ghost:hover { border-color: #4a4a60; color: var(--text); }
-.btn-coffee { background: var(--coffee); color: #111; }
-.btn-coffee:hover { background: #ffe840; color: #111; }
-.btn-small { padding: 8px 14px; font-size: 14px; }
+.bmc { display: inline-block; line-height: 0; border-radius: 12px; transition: transform .15s, opacity .15s; }
+.bmc:hover { transform: translateY(-1px); opacity: .9; }
+.bmc:focus-visible { outline: 2px solid var(--coffee); outline-offset: 3px; }
 .btn small { font-weight: 500; opacity: .85; }
 
 .hero { padding: 64px 0 40px; }
@@ -227,7 +226,7 @@ footer a { color: var(--muted); }
   .hero .wrap, .how, .two { grid-template-columns: 1fr; }
   .cards, .features { grid-template-columns: 1fr; }
   .glance { grid-template-columns: 1fr 1fr; }
-  nav.links a:not(.btn) { display: none; }
+  nav.links a:not(.bmc) { display: none; }
   .hero { padding-top: 40px; }
 }
 @media (max-width: 480px) {
@@ -250,7 +249,7 @@ footer a { color: var(--muted); }
       <a href="#how-it-works">How it works</a>
       <a href="#faq">FAQ</a>
       <a href="https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay">GitHub</a>
-      <a class="btn btn-coffee btn-small" href="https://buymeacoffee.com/oguzhantasimaz" rel="noopener">☕ Buy me a coffee</a>
+      <a class="bmc" href="https://buymeacoffee.com/oguzhantasimaz" rel="noopener"><img src="img/bmc-button.png" alt="Buy me a coffee" width="143" height="40"></a>
     </nav>
   </div>
 </header>
@@ -464,7 +463,7 @@ footer a { color: var(--muted); }
       <div class="box">
         <h2 id="support-h">Enjoying it?</h2>
         <p>Guitar Flash AutoPlay is free and made in my spare time. If it saved you some frustration, or you learned something from the code, a coffee keeps it going.</p>
-        <a class="btn btn-coffee" href="https://buymeacoffee.com/oguzhantasimaz" rel="noopener">☕ Buy me a coffee</a>
+        <a class="bmc" href="https://buymeacoffee.com/oguzhantasimaz" rel="noopener"><img src="img/bmc-button.png" alt="Buy me a coffee" width="217" height="60"></a>
       </div>
     </div>
   </section>

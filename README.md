@@ -128,30 +128,38 @@ spacings above the frets, so a lane at height `h` is squeezed by
 
 ```
             \    \   |   /    /       the lanes meet 4.44 spacings up
-         ....\....\..|../..../....    upper sensor, 2 spacings above the frets
+         ....\....\..|../..../....    upper sensor, 1.9 spacings above the frets
               \    \ | /    /
-          .....\....\|/..../.....     lower sensor, 1 spacing above the frets
+          .....\....\|/..../.....     lower sensor, 1.05 spacings above the frets
                (G) (R) (Y) (B) (O)    fret rings, 1 spacing apart
 ```
 
-**3. Watch two sensor lines.** Just above the frets the app reads two short
+**3. Watch two sensor lines.** Above the frets the app reads two short
 horizontal strips across each lane, over a hundred times a second. It
-captures only those pixels, so each read is tiny and fast. A strip is "covered" when its
-pixels are bright and saturated (the coloured gem) or white (its cap).
-A gem covers about 90–100% of a strip, while the thin tail of a sustained note
-covers only 10–30%, which is how notes and tails are told apart
-([`internal/vision/sensor.go`](internal/vision/sensor.go)).
+captures only those pixels, so each read is tiny and fast. A strip is
+"covered" by the pixels that have the lane's own colour (the gem) or are
+white (its cap). A gem covers about 90–100% of a strip, while the thin tail
+of a sustained note covers only 10–30%, which is how notes and tails are told
+apart. The sensors sit above the flame the game draws on a hit (it reaches
+0.8 spacings up), and a yellow flame on the green fret never counts as a green
+note anyway ([`internal/vision/sensor.go`](internal/vision/sensor.go)).
 
 **4. Measure the speed.** Every note crosses the upper sensor first and the
-lower one a moment later. Distance (1 spacing) divided by that time is the
-scroll speed, averaged over recent notes, so it adapts to every difficulty
-without any setting.
+lower one a moment later. That travel time, averaged over recent notes, says
+how fast the song scrolls, so it adapts to every difficulty without any
+setting.
 
-**5. Press on time.** When a note reaches the lower sensor, the app knows
-exactly how far it still has to go, so it schedules the key press for the
-moment the note reaches the fret. It holds the key while a sustain tail
-passes, and ignores the white flash of special effects
-([`internal/engine`](internal/engine)).
+**5. Press on time.** Notes are drawn in perspective: slow at the far end of
+the highway, faster near the frets. So instead of assuming a constant speed,
+the app uses a ratio measured on the game: from the lower sensor, a note
+needs 1.45 times its upper-to-lower travel time to look centred on its fret.
+The game counts a hit about 0.1 s before that, so the key goes down 120 ms
+earlier. The app holds the key while a sustain tail passes, and ignores the
+white flash of special effects ([`internal/engine`](internal/engine)).
+
+These numbers were measured by running the app against the real game in a
+browser and timing notes frame by frame; with them it plays a whole song on
+Expert at 99% (507 of 508 notes).
 
 **Resolution and DPI details.** On Windows the app declares itself DPI aware,
 so screenshots and coordinates are real pixels even at 150% scaling. On
@@ -187,10 +195,11 @@ go build ./cmd/guitarflash-autoplay
 - **macOS** needs the Xcode command line tools (`xcode-select --install`)
   because it calls CoreGraphics. The release workflow shows how the `.app`
   bundle and its icon are put together.
-- **Linux** can build and run the window and the tests (the window toolkit,
+- **Linux** works too, experimentally and on X11 only (the window toolkit,
   [Gio](https://gioui.org), needs `libwayland-dev libx11-dev libx11-xcb-dev
   libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev
-  libxcursor-dev libvulkan-dev`), but live play is Windows and macOS only.
+  libxcursor-dev libvulkan-dev` to build). It also runs under `Xvfb`, which is
+  how the app was tested against the real game without a screen.
 
 Run the tests with `go test ./...`. They run on any OS, and draw synthetic
 fretboards at sizes from tiny to 4K. To look at the window without a screen,
@@ -213,7 +222,7 @@ git tag v3.0.0 && git push origin v3.0.0
 | `internal/player` | The bot itself: find the board, follow the notes, press the keys |
 | `internal/vision` | Finding the fretboard and reading the lanes (pure Go, no OS code) |
 | `internal/engine` | Note tracking, speed measurement and key-press timing (pure Go) |
-| `internal/platform` | Screen capture, key presses and permissions for Windows and macOS |
+| `internal/platform` | Screen capture, key presses and permissions for Windows, macOS and Linux (X11) |
 | `assets`, `tools/mkicon` | The icon (drawn by code), the macOS `Info.plist`, the Windows manifest |
 
 ## History

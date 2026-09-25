@@ -1,11 +1,19 @@
 // Package engine turns lane readings into timed key presses.
 //
 // Two sensor lines sit above the frets. Every note crosses the upper line
-// first and the lower line a little later; the time between the two gives
-// the scroll speed, so the engine knows exactly when the note will reach the
-// frets and can press the key at that moment. Measuring the speed instead of
+// first and the lower line a little later; the time between the two tells
+// how fast the song scrolls, so the engine knows when the note will reach
+// the frets and can press the key at that moment. Measuring instead of
 // hard-coding a delay makes it work on every difficulty, screen size and
 // computer speed.
+//
+// Notes do not move at a constant speed over the whole highway: the game
+// draws them in perspective, so they are slow at the far end and speed up
+// towards the frets. What the engine needs is only the last stretch, so it
+// uses a ratio measured on the game, Reach: the time from the lower line to
+// the moment a note must be hit, divided by the time from the upper line to
+// the lower one. It does not depend on the screen size or the scroll speed,
+// only on where the sensors are.
 package engine
 
 import (
@@ -17,17 +25,21 @@ import (
 // Params tune the engine. Heights are in fret spacings above the fret line.
 type Params struct {
 	Upper, Lower float64
-	// HitLead is the distance from a gem's leading edge (what the sensor
-	// sees first) to its centre, which is what has to meet the fret.
-	HitLead float64
-	// Latency is how old a screenshot is by the time we act on it; presses
-	// are moved earlier by this much.
-	Latency time.Duration
+	// Reach is how long a note needs from the lower line until it has to be
+	// hit, in units of its travel time from the upper line to the lower one
+	// (see the package documentation). It belongs to Upper and Lower.
+	Reach float64
+	// Lead moves every press this much before the moment the note looks
+	// centred on its fret. The game counts a note as hit a bit before that,
+	// and the screenshot is a few milliseconds old by the time it is read.
+	// Measured on the game: the best results come at about 120 ms, on every
+	// difficulty (the old hard-coded version pressed about 100 ms early too).
+	Lead time.Duration
 	// Offset is a manual correction: positive presses later.
 	Offset time.Duration
-	// DefaultSpeed (spacings per second) is used until the first note has
-	// been measured.
-	DefaultSpeed float64
+	// DefaultTravel is the upper-to-lower travel time used until the first
+	// note has been measured.
+	DefaultTravel time.Duration
 	// MinPress is the shortest time a key is held down.
 	MinPress time.Duration
 	// Hold keeps keys down through the tail of sustained notes.
@@ -37,13 +49,14 @@ type Params struct {
 // DefaultParams are tuned on the HTML5 version of guitarflash.com.
 func DefaultParams() Params {
 	return Params{
-		Upper:        2.0,
-		Lower:        1.0,
-		HitLead:      0.13,
-		Latency:      20 * time.Millisecond,
-		DefaultSpeed: 8,
-		MinPress:     25 * time.Millisecond,
-		Hold:         true,
+		// The flame of a hit note reaches 0.8 spacings up; stay above it.
+		Upper:         1.9,
+		Lower:         1.05,
+		Reach:         1.45,
+		Lead:          120 * time.Millisecond,
+		DefaultTravel: 230 * time.Millisecond,
+		MinPress:      25 * time.Millisecond,
+		Hold:          true,
 	}
 }
 
@@ -61,7 +74,7 @@ type Engine struct {
 	upper  [5]detector
 	lower  [5]detector
 	queue  [5][]time.Time // upper-line crossings waiting for their lower one
-	speed  speedEstimate
+	travel estimate       // upper-to-lower travel time, in seconds
 	down   [5]bool
 	downAt [5]time.Time
 	lastUp [5]time.Time
@@ -77,21 +90,27 @@ func (e *Engine) Params() Params { return e.p }
 // that are still down should be released with ReleaseAll first.
 func (e *Engine) Reset() { *e = Engine{p: e.p} }
 
-// Speed returns the scroll speed in spacings per second and whether it has
-// been measured yet.
-func (e *Engine) Speed() (float64, bool) {
-	if v, ok := e.speed.value(); ok {
-		return v, true
+// Travel returns the measured time a note takes from the upper line to the
+// lower one, and whether it has been measured yet.
+func (e *Engine) Travel() (time.Duration, bool) {
+	if t, ok := e.travel.value(); ok {
+		return seconds(t), true
 	}
-	return e.p.DefaultSpeed, false
+	return e.p.DefaultTravel, false
 }
 
-// delay is the time from a note's leading edge crossing the lower line
-// until the key should go down.
+// Speed returns how fast notes move between the sensor lines, in spacings
+// per second, and whether it has been measured yet.
+func (e *Engine) Speed() (float64, bool) {
+	t, ok := e.Travel()
+	return (e.p.Upper - e.p.Lower) / t.Seconds(), ok
+}
+
+// delay is the time from a note crossing the lower line until the key
+// should go down.
 func (e *Engine) delay() time.Duration {
-	v, _ := e.Speed()
-	travel := (e.p.Lower + e.p.HitLead) / v
-	return time.Duration(travel*float64(time.Second)) - e.p.Latency + e.p.Offset
+	t, _ := e.Travel()
+	return time.Duration(float64(t)*e.p.Reach) - e.p.Lead + e.p.Offset
 }
 
 // maxHold releases a key that has been held suspiciously long, in case a
@@ -154,14 +173,13 @@ func (e *Engine) forceUp(k int, t time.Time) Action {
 }
 
 // measure pairs a lower-line crossing with the upper-line crossing of the
-// same note and records the speed.
+// same note and records the travel time.
 func (e *Engine) measure(k int, t time.Time) {
-	dist := e.p.Upper - e.p.Lower
 	const minTravel = 15 * time.Millisecond
 	maxTravel := 1500 * time.Millisecond
 	expected := time.Duration(0)
-	if v, ok := e.speed.value(); ok {
-		expected = seconds(dist / v)
+	if tr, ok := e.travel.value(); ok {
+		expected = seconds(tr)
 		maxTravel = expected * 5 / 2
 	}
 
@@ -186,7 +204,7 @@ func (e *Engine) measure(k int, t time.Time) {
 		}
 	}
 	if pick >= 0 {
-		e.speed.add(dist / t.Sub(q[pick]).Seconds())
+		e.travel.add(t.Sub(q[pick]).Seconds())
 		q = q[pick+1:]
 	}
 	e.queue[k] = q
@@ -229,15 +247,15 @@ func (e *Engine) release(k int, t time.Time) []Action {
 	return []Action{e.forceUp(k, up)}
 }
 
-// speedEstimate averages recent speed measurements, ignoring outliers from
-// mismatched notes. If the speed really changes (a new song
-// on another difficulty), the outliers keep coming and it starts over.
-type speedEstimate struct {
+// estimate averages recent measurements, ignoring outliers from mismatched
+// notes. If the value really changes (a new song on another difficulty),
+// the outliers keep coming and it starts over.
+type estimate struct {
 	samples []float64
 	rejects int
 }
 
-func (s *speedEstimate) add(v float64) {
+func (s *estimate) add(v float64) {
 	if v <= 0 || math.IsInf(v, 0) || math.IsNaN(v) {
 		return
 	}
@@ -257,7 +275,7 @@ func (s *speedEstimate) add(v float64) {
 
 // value is the mean of the middle half of the samples: as robust as the
 // median, but it also averages out the rounding to whole screen frames.
-func (s *speedEstimate) value() (float64, bool) {
+func (s *estimate) value() (float64, bool) {
 	n := len(s.samples)
 	if n == 0 {
 		return 0, false

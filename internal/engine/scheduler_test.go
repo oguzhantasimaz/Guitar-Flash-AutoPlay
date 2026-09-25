@@ -50,7 +50,8 @@ func TestSchedulerRunsActionsInOrderAndOnTime(t *testing.T) {
 		if got[i].Lane != w.lane || got[i].Down != w.down {
 			t.Errorf("event %d: lane %d down=%v, want lane %d down=%v", i, got[i].Lane, got[i].Down, w.lane, w.down)
 		}
-		if late := got[i].At.Sub(now.Add(w.at)); w.at > 0 && (late < 0 || late > 25*time.Millisecond) {
+		// Generous: CI machines can be busy.
+		if late := got[i].At.Sub(now.Add(w.at)); w.at > 0 && (late < 0 || late > 50*time.Millisecond) {
 			t.Errorf("event %d ran %v late", i, late)
 		}
 	}

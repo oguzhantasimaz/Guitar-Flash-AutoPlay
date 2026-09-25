@@ -36,8 +36,8 @@ func Run(version string) {
 		u.w = new(app.Window)
 		u.w.Option(
 			app.Title("Guitar Flash AutoPlay"),
-			app.Size(unit.Dp(480), unit.Dp(860)),
-			app.MinSize(unit.Dp(420), unit.Dp(560)),
+			app.Size(unit.Dp(480), unit.Dp(720)),
+			app.MinSize(unit.Dp(400), unit.Dp(480)),
 		)
 		u.loop()
 		u.shutdown()

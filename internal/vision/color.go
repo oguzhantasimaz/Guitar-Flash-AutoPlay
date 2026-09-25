@@ -79,6 +79,11 @@ func Classify(r, g, b uint8) Class {
 	if s < 140 || v < 115 {
 		return None
 	}
+	return hueClass(h)
+}
+
+// hueClass is the fret colour a hue belongs to.
+func hueClass(h int) Class {
 	switch {
 	case h < 12 || h >= 340:
 		return Red
@@ -94,14 +99,16 @@ func Classify(r, g, b uint8) Class {
 	return None
 }
 
-// isNote reports whether a pixel looks like part of a note gem: either a
-// bright saturated colour or the white highlight on top of the gem. The
-// highway itself is a dark translucent overlay (around 33,33,33), so the band
-// photo behind it never gets this bright.
-func isNote(r, g, b uint8) bool {
-	_, s, v := hsv(r, g, b)
+// isNote reports whether a pixel looks like part of a note gem of colour c:
+// either a bright pixel of that colour or the white cap on top of the gem.
+// The highway itself is a dark translucent overlay (around 33,33,33), so the
+// band photo behind it never gets this bright. Other colours are ignored, so
+// the yellow flame of a hit note on the green fret does not look like a
+// green note.
+func isNote(c Class, r, g, b uint8) bool {
+	h, s, v := hsv(r, g, b)
 	if v >= 125 && s >= 115 {
-		return true
+		return hueClass(h) == c
 	}
 	mn := r
 	if g < mn {

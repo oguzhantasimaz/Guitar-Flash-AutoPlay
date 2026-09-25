@@ -198,7 +198,7 @@ func (c *cli) Key(lane int, down bool) {
 	c.notes++
 	c.mu.Unlock()
 	if c.debug {
-		fmt.Printf("  press %-6s %s\n", vision.FretColors[lane], c.keys[lane].Name)
+		fmt.Printf("  %s press %-6s %s\n", time.Now().Format("15:04:05.000"), vision.FretColors[lane], c.keys[lane].Name)
 	}
 }
 

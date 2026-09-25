@@ -79,8 +79,10 @@ func NewLine(b Board, h float64) Line {
 // the coverage is meaningless.
 func (l Line) Read(img *image.RGBA) (cov [5]float64, flash bool) {
 	for k, rows := range l.lanes {
+		c := FretColors[k]
+		gem := func(r, g, b uint8) bool { return isNote(c, r, g, b) }
 		for _, s := range rows {
-			cov[k] = math.Max(cov[k], s.coverage(img, isNote))
+			cov[k] = math.Max(cov[k], s.coverage(img, gem))
 		}
 	}
 	bright := 0.0

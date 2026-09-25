@@ -12,7 +12,9 @@ difficulty.
 
 <p align="center"><img src="assets/screenshot.png" alt="The app's window" width="360"></p>
 
-[Watch it play on YouTube](https://youtube.com/shorts/noo72JP1h3k?feature=share "Working Example")
+**Website and downloads:** <https://oguzhantasimaz.github.io/Guitar-Flash-AutoPlay/>
+· [Watch it play on YouTube](https://youtube.com/shorts/noo72JP1h3k?feature=share "Working Example")
+· [☕ Buy me a coffee](https://buymeacoffee.com/oguzhantasimaz)
 
 > This is a fun project to show how screen-reading bots work. Please don't use
 > it to submit scores to the rankings or in multiplayer duels.
@@ -230,6 +232,7 @@ git tag v3.0.0 && git push origin v3.0.0
 | `internal/engine` | Note tracking, speed measurement and key-press timing (pure Go) |
 | `internal/platform` | Screen capture, key presses and permissions for Windows, macOS and Linux (X11) |
 | `assets`, `tools/mkicon` | The icon (drawn by code), the macOS `Info.plist`, the Windows manifest |
+| `site` | The website, published to GitHub Pages by `.github/workflows/pages.yml` |
 
 ## History
 
@@ -238,4 +241,5 @@ git tag v3.0.0 && git push origin v3.0.0
 - **v2**: Go version with hard-coded coordinates for one screen.
 - **v1**: Python version.
 
-Feel free to contribute!
+Feel free to contribute! If the app is useful to you, you can
+[buy me a coffee](https://buymeacoffee.com/oguzhantasimaz).

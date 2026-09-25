@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guitar Flash AutoPlay – Free Guitar Flash Bot for Windows &amp; macOS</title>
-<meta name="description" content="Guitar Flash AutoPlay is a free, open-source app that plays Guitar Flash for you on Windows and macOS. It finds the fretboard at any screen resolution and presses the keys on time: 98% on Through the Fire and Flames (Expert).">
+<meta name="description" content="Guitar Flash AutoPlay is a free, open-source app that plays Guitar Flash for you on Windows and macOS. It finds the fretboard at any screen resolution and presses the keys on time: 99% on Through the Fire and Flames (Expert), 2350 of 2354 notes.">
 <link rel="canonical" href="https://guitarflash.oguzhantasimaz.com/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="author" content="Oguzhan Tasimaz">
@@ -98,7 +98,7 @@
         {"@type": "Question", "name": "Is Guitar Flash AutoPlay free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. It is free and open source under the GPL-3.0 license. If you like it, you can support the author at buymeacoffee.com/oguzhantasimaz."}},
         {"@type": "Question", "name": "Does it work on Mac and Windows?", "acceptedAnswer": {"@type": "Answer", "text": "Yes: Windows 10 and 11 (x64 and ARM) and macOS 11 or later (Apple Silicon and Intel). Linux works experimentally on X11."}},
         {"@type": "Question", "name": "Do I have to set my screen resolution or coordinates?", "acceptedAnswer": {"@type": "Answer", "text": "No. The app finds the five fret rings on the screen by itself and measures everything relative to them, so it works at any resolution, browser zoom, Retina or HiDPI screen and Windows display scaling from 100% to 200%."}},
-        {"@type": "Question", "name": "How accurate is it?", "acceptedAnswer": {"@type": "Answer", "text": "Tested against the real game on Expert: Breakthrough at 99% (507 of 508 notes) and Through the Fire and Flames at 98% (2314 notes hit), in a browser that only drew about 30 frames per second."}},
+        {"@type": "Question", "name": "How accurate is it?", "acceptedAnswer": {"@type": "Answer", "text": "Tested against the real game on Expert: Through the Fire and Flames at 99% (2350 of 2354 notes) and Breakthrough at 99% (507 of 508 notes), in a test browser without a graphics card."}},
         {"@type": "Question", "name": "Which keys and game style does it use?", "acceptedAnswer": {"@type": "Answer", "text": "It presses A, S, J, K and L by default, the Guitar Flash defaults; change them in the app if you changed Setting Keys in the game. Use the Tap game style."}},
         {"@type": "Question", "name": "Why does Windows or macOS warn me when I open it?", "acceptedAnswer": {"@type": "Answer", "text": "The app is not code-signed, so Windows SmartScreen and macOS Gatekeeper warn about it. On Windows click More info, then Run anyway. On macOS open System Settings, Privacy & Security, and click Open Anyway. The source code is public on GitHub."}},
         {"@type": "Question", "name": "Who made Guitar Flash AutoPlay?", "acceptedAnswer": {"@type": "Answer", "text": "Oğuzhan Taşımaz. The first version was a small Python script written at university in March 2020. It was rewritten in Go in 2023 and rebuilt from scratch as a Windows and macOS app in 2026."}},
@@ -285,7 +285,7 @@ footer a { color: var(--muted); }
           <a class="btn btn-primary" id="dl-main" href="#download">Download free</a>
           <a class="btn btn-ghost" href="#how-to-use">How to use it</a>
         </div>
-        <p class="meta">Tested on the real game, Expert difficulty: <strong>98%</strong> on Through the Fire and Flames, <strong>99%</strong> on Breakthrough. Open source (GPL-3.0). <a href="https://youtube.com/shorts/noo72JP1h3k">Watch it play on YouTube</a>.</p>
+        <p class="meta">Tested on the real game, Expert difficulty: <strong>99%</strong> on Through the Fire and Flames (2350 of 2354 notes), <strong>99%</strong> on Breakthrough. Open source (GPL-3.0). <a href="https://youtube.com/shorts/noo72JP1h3k">Watch it play on YouTube</a>.</p>
       </div>
       <picture>
         <source srcset="img/app.webp" type="image/webp">
@@ -302,7 +302,7 @@ footer a { color: var(--muted); }
         <div><dt>Works on</dt><dd>Windows 10 &amp; 11, macOS 11+</dd></div>
         <div><dt>Price</dt><dd>Free, open source</dd></div>
         <div><dt>Screen setup</dt><dd>None: any resolution</dd></div>
-        <div><dt>Best result</dt><dd>98% on TTFAF Expert</dd></div>
+        <div><dt>Best result</dt><dd>99% on TTFAF Expert</dd></div>
       </dl>
     </div>
   </section>
@@ -448,12 +448,12 @@ footer a { color: var(--muted); }
   <section id="tested" aria-labelledby="tested-h">
     <div class="wrap">
       <h2 id="tested-h">Tested on the real game</h2>
-      <p class="intro">Played start to finish on guitarflash.com on Expert, in a browser that only drew about 30 frames per second, so harder than a normal PC.</p>
+      <p class="intro">Played start to finish on guitarflash.com on Expert, with the default settings, in a test browser without a graphics card. It draws only about 40–50 frames per second and now and then freezes for a moment, which is harder than a normal PC.</p>
       <div class="scroll">
       <table>
         <thead><tr><th>Song</th><th>Difficulty</th><th>Result</th><th>Notes hit</th></tr></thead>
         <tbody>
-          <tr><td>Through the Fire and Flames – DragonForce</td><td>Expert</td><td><strong>98%</strong></td><td>2314 (40 missed)</td></tr>
+          <tr><td>Through the Fire and Flames – DragonForce</td><td>Expert</td><td><strong>99%</strong></td><td>2350 of 2354</td></tr>
           <tr><td>Breakthrough – MindFlow</td><td>Expert</td><td><strong>99%</strong></td><td>507 of 508</td></tr>
         </tbody>
       </table>
@@ -509,7 +509,7 @@ while True:
       <details><summary>Is it free?</summary><p>Yes. It is free and open source under the GPL-3.0 license. If you like it, you can <a href="https://buymeacoffee.com/oguzhantasimaz" rel="noopener">buy me a coffee</a>.</p></details>
       <details><summary>Does it work on Mac and Windows?</summary><p>Yes: Windows 10 and 11 (x64 and ARM) and macOS 11 or later (Apple Silicon and Intel). Linux works experimentally on X11.</p></details>
       <details><summary>Do I have to set my screen resolution or coordinates?</summary><p>No. The app finds the five fret rings on the screen by itself and measures everything relative to them, so it works at any resolution, browser zoom, Retina or HiDPI screen and Windows display scaling from 100% to 200%.</p></details>
-      <details><summary>How accurate is it?</summary><p>Tested against the real game on Expert: Breakthrough at 99% (507 of 508 notes) and Through the Fire and Flames at 98% (2314 notes hit), in a browser that only drew about 30 frames per second.</p></details>
+      <details><summary>How accurate is it?</summary><p>Tested against the real game on Expert: Through the Fire and Flames at 99% (2350 of 2354 notes) and Breakthrough at 99% (507 of 508 notes), in a test browser without a graphics card. If notes are hit a little early or late on your computer, move the <strong>Timing</strong> slider.</p></details>
       <details><summary>Which keys and game style does it use?</summary><p>It presses A, S, J, K and L by default, the Guitar Flash defaults; change them in the app if you changed <em>Setting Keys</em> in the game. Use the <strong>Tap</strong> game style.</p></details>
       <details><summary>Why does Windows or macOS warn me when I open it?</summary><p>The app is not code-signed, so Windows SmartScreen and macOS Gatekeeper warn about it. On Windows click <em>More info → Run anyway</em>. On macOS open <em>System Settings → Privacy &amp; Security</em> and click <em>Open Anyway</em>. The source code is public on <a href="https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay">GitHub</a>.</p></details>
       <details><summary>How do I stop it?</summary><p>Press <strong>Stop</strong> in the app, or move the mouse to the top-left corner of the screen. On the command line, press Ctrl+C.</p></details>

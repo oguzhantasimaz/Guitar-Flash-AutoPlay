@@ -394,7 +394,7 @@ func offsetText(ms int) string {
 	case ms > 0:
 		return fmt.Sprintf("+%d ms later", ms)
 	case ms < 0:
-		return fmt.Sprintf("%d ms earlier", ms)
+		return fmt.Sprintf("%d ms earlier", -ms)
 	}
 	return "on time"
 }

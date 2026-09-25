@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://oguzhantasimaz.github.io/Guitar-Flash-AutoPlay/sitemap.xml

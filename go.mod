@@ -1,27 +1,24 @@
-module guitarflash
+module github.com/oguzhantasimaz/Guitar-Flash-AutoPlay
 
-go 1.19
+go 1.24.0
+
+toolchain go1.24.7
 
 require (
-	github.com/StackExchange/wmi v1.2.1 // indirect
-	github.com/gen2brain/shm v0.0.0-20230802011745-f2460f5984f7 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/go-vgo/robotgo v0.100.10 // indirect
-	github.com/jezek/xgb v1.1.0 // indirect
-	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237 // indirect
+	gioui.org v0.10.2
+	github.com/jezek/xgb v1.1.1
+	github.com/kbinani/screenshot v0.0.0-20250624051815-089614a94018
+	golang.org/x/image v0.26.0
+)
+
+require (
+	gioui.org/shader v1.0.9 // indirect
+	github.com/gen2brain/shm v0.1.0 // indirect
+	github.com/go-text/typesetting v0.3.4 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
-	github.com/otiai10/gosseract v2.2.1+incompatible // indirect
-	github.com/robotn/gohook v0.31.3 // indirect
-	github.com/robotn/xgb v0.0.0-20190912153532-2cb92d044934 // indirect
-	github.com/robotn/xgbutil v0.0.0-20190912154524-c861d6f87770 // indirect
-	github.com/shirou/gopsutil v3.21.10+incompatible // indirect
-	github.com/tklauser/go-sysconf v0.3.9 // indirect
-	github.com/tklauser/numcpus v0.3.0 // indirect
-	github.com/vcaesar/gops v0.21.3 // indirect
-	github.com/vcaesar/imgo v0.30.0 // indirect
-	github.com/vcaesar/keycode v0.10.0 // indirect
-	github.com/vcaesar/tt v0.20.0 // indirect
-	gocv.io/x/gocv v0.34.0 // indirect
-	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
-	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/exp/shiny v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
 )

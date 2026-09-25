@@ -1,0 +1,34 @@
+# Guitar Flash AutoPlay
+
+> Guitar Flash AutoPlay is a free, open-source (GPL-3.0) app for Windows and macOS that plays the browser rhythm game Guitar Flash (guitarflash.com) automatically. It reads the screen, finds the fretboard at any resolution and presses the fret keys when each note reaches the frets. Author: Oguzhan Tasimaz.
+
+Key facts:
+
+- Platforms: Windows 10 and 11 (x64 and ARM64), macOS 11 or later (one universal app for Apple Silicon and Intel). Linux works experimentally on X11.
+- Price: free. Support the author: https://buymeacoffee.com/oguzhantasimaz
+- No screen setup: it finds the five fret rings itself and measures every distance in fret spacings, so it works at any resolution, browser zoom, Retina/HiDPI screen and Windows display scaling.
+- It measures how fast the notes scroll while playing, so it needs no setting per difficulty.
+- Results on the real game, Expert: Through the Fire and Flames (DragonForce) 98%, 2314 notes hit; Breakthrough 99%, 507 of 508.
+- Default keys A, S, J, K, L (the game's defaults); game style Tap.
+- Not affiliated with Guitar Flash or gamesX.
+
+## How to use
+
+1. Download the zip for your computer and unzip it.
+2. Windows: open "Guitar Flash AutoPlay.exe" (if SmartScreen warns: More info > Run anyway). macOS: open "Guitar Flash AutoPlay.app", allow it in System Settings > Privacy & Security if asked, and allow Screen & System Audio Recording and Accessibility.
+3. Open a song on guitarflash.com with the Tap game style; put the app window beside the browser.
+4. Press Start, then click on the game within 3 seconds.
+5. Press Stop, or move the mouse to the top-left corner of the screen, to stop.
+
+## Links
+
+- [Website](https://oguzhantasimaz.github.io/Guitar-Flash-AutoPlay/)
+- [Download for Windows x64](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/releases/latest/download/guitarflash-autoplay-windows-x64.zip)
+- [Download for Windows ARM64](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/releases/latest/download/guitarflash-autoplay-windows-arm64.zip)
+- [Download for macOS](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/releases/latest/download/guitarflash-autoplay-macos.zip)
+- [All releases](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/releases)
+- [Source code and README](https://github.com/oguzhantasimaz/Guitar-Flash-AutoPlay)
+
+## How it works
+
+The app takes screenshots and looks for five rings (green, red, yellow, blue, orange) evenly spaced on a line, next to the white edges of the highway. Two sensor lines above the frets (1.9 and 1.05 fret spacings up) read each lane over a hundred times a second; each gem is tracked from frame to frame. The travel time between the lines gives the scroll speed; a note needs 1.45 times that time from the lower line to its fret, and the key goes down 120 ms early because the game counts a hit a little before the note is centred.

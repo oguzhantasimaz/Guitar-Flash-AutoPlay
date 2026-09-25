@@ -35,6 +35,7 @@ var (
 	colGood    = rgb(0x43c463)
 	colWait    = rgb(0xffb300)
 	colProblem = rgb(0x5a1f24)
+	colCoffee  = rgb(0xffdd00) // Buy Me a Coffee yellow
 
 	// The fret colours, as the game draws them.
 	fretColors = [5]color.NRGBA{rgb(0x0b9712), rgb(0xee0e0d), rgb(0xe1e214), rgb(0x1192e3), rgb(0xee6310)}
@@ -77,7 +78,8 @@ func (u *UI) layout(gtx C) D {
 		},
 		func(gtx C) D { return u.logCard(gtx, st) },
 		func(gtx C) D {
-			return label(gtx, u.th, 12, colMuted, "Stop any time: move the mouse to the top-left corner of the screen.")
+			return label(gtx, u.th, 12, colMuted, "Stop any time: move the mouse to the top-left corner of the screen.\n"+
+				"Guitar Flash AutoPlay "+u.version+" · github.com/oguzhantasimaz/Guitar-Flash-AutoPlay")
 		},
 	)
 	gap := layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout)
@@ -99,13 +101,21 @@ func (u *UI) layout(gtx C) D {
 }
 
 func (u *UI) header(gtx C) D {
-	return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
+	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Flexed(1, func(gtx C) D {
 			l := material.Label(u.th, 22, "Guitar Flash AutoPlay")
 			l.Font.Weight = font.Bold
 			return l.Layout(gtx)
 		}),
-		layout.Rigid(func(gtx C) D { return label(gtx, u.th, 12, colMuted, u.version) }),
+		layout.Rigid(func(gtx C) D {
+			b := material.Button(u.th, &u.coffeeBtn, "Buy me a coffee")
+			b.Background, b.Color = colCoffee, colBg
+			b.TextSize = 13
+			b.Font.Weight = font.SemiBold
+			b.CornerRadius = unit.Dp(14)
+			b.Inset = layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(12), Right: unit.Dp(12)}
+			return b.Layout(gtx)
+		}),
 	)
 }
 

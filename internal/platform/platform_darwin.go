@@ -213,13 +213,8 @@ func boolInt(b bool) C.int {
 // PauseBeforeExit does nothing on macOS: Terminal keeps the window open.
 func PauseBeforeExit() {}
 
-// OpenSettings opens the System Settings page where p is fixed.
-func OpenSettings(p Problem) error {
-	if p.Settings == "" {
-		return fmt.Errorf("no settings page for this problem")
-	}
-	return exec.Command("open", p.Settings).Start()
-}
+// OpenURL opens a web page, or a System Settings page, with its app.
+func OpenURL(u string) error { return exec.Command("open", u).Start() }
 
 // UseParentConsole does nothing here: programs always have their terminal.
 func UseParentConsole() {}

@@ -176,10 +176,5 @@ func PauseBeforeExit() {}
 // UseParentConsole does nothing on Linux.
 func UseParentConsole() {}
 
-// OpenSettings opens the settings page of p, if it has one.
-func OpenSettings(p Problem) error {
-	if p.Settings == "" {
-		return fmt.Errorf("no settings page for this problem")
-	}
-	return exec.Command("xdg-open", p.Settings).Start()
-}
+// OpenURL opens a web page in the default browser.
+func OpenURL(u string) error { return exec.Command("xdg-open", u).Start() }

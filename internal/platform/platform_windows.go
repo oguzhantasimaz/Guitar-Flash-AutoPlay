@@ -25,6 +25,7 @@ var (
 	kernel32               = syscall.NewLazyDLL("kernel32.dll")
 	procGetConsoleProcs    = kernel32.NewProc("GetConsoleProcessList")
 	procAttachConsole      = kernel32.NewProc("AttachConsole")
+	procShellExecute       = syscall.NewLazyDLL("shell32.dll").NewProc("ShellExecuteW")
 )
 
 func init() {
@@ -141,9 +142,20 @@ func PauseBeforeExit() {
 	}
 }
 
-// OpenSettings does nothing here: no problem on this system has a settings
-// page.
-func OpenSettings(p Problem) error { return fmt.Errorf("no settings page for this problem") }
+// OpenURL opens a web page in the default browser.
+func OpenURL(u string) error {
+	verb, _ := syscall.UTF16PtrFromString("open")
+	target, err := syscall.UTF16PtrFromString(u)
+	if err != nil {
+		return err
+	}
+	const showNormal = 1
+	// ShellExecute returns a value above 32 on success.
+	if r, _, err := procShellExecute.Call(0, uintptr(unsafe.Pointer(verb)), uintptr(unsafe.Pointer(target)), 0, 0, showNormal); r <= 32 {
+		return fmt.Errorf("ShellExecute: %v", err)
+	}
+	return nil
+}
 
 // UseParentConsole lets the windowed build (which has no console of its
 // own) print to the terminal it was started from, when it is used on the

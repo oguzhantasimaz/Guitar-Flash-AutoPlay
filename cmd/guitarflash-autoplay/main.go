@@ -79,6 +79,7 @@ func run() int {
 		fmt.Fprintln(out, "Stop it with Ctrl+C, or by moving the mouse to the top-left corner of the screen.")
 		fmt.Fprintln(out)
 		flag.PrintDefaults()
+		fmt.Fprintf(out, "\nEnjoying it? Buy me a coffee: %s\n", ui.CoffeeURL)
 	}
 	flag.Parse()
 

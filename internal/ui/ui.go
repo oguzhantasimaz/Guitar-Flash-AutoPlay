@@ -28,6 +28,9 @@ import (
 	"github.com/oguzhantasimaz/Guitar-Flash-AutoPlay/internal/vision"
 )
 
+// CoffeeURL is where people can support the project.
+const CoffeeURL = "https://buymeacoffee.com/oguzhantasimaz"
+
 // Run opens the window and never returns; the program exits when the window
 // is closed. It must be called from the main goroutine.
 func Run(version string) {
@@ -82,6 +85,7 @@ type UI struct {
 	done   chan struct{}
 
 	startBtn     widget.Clickable
+	coffeeBtn    widget.Clickable
 	calibrateBtn widget.Clickable
 	autoBtn      widget.Clickable
 	settingsBtns [4]widget.Clickable
@@ -160,6 +164,11 @@ func (u *UI) handle(gtx C) {
 			u.stop()
 		} else {
 			u.start()
+		}
+	}
+	if u.coffeeBtn.Clicked(gtx) {
+		if err := platform.OpenURL(CoffeeURL); err != nil {
+			u.log("Could not open the browser: " + err.Error() + ". The page is " + CoffeeURL)
 		}
 	}
 	if u.calibrateBtn.Clicked(gtx) {

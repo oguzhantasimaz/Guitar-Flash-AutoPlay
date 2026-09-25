@@ -97,6 +97,14 @@ func ParseKey(name string) (Key, error) {
 	return newKey(n, c), nil
 }
 
+// OpenSettings opens the system settings page where p is fixed.
+func OpenSettings(p Problem) error {
+	if p.Settings == "" {
+		return errors.New("no settings page for this problem")
+	}
+	return OpenURL(p.Settings)
+}
+
 // Problem is something the user has to fix before the player can work, with
 // instructions on how to do it.
 type Problem struct {

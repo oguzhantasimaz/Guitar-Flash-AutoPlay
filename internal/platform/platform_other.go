@@ -2,10 +2,7 @@
 
 package platform
 
-import (
-	"fmt"
-	"image"
-)
+import "image"
 
 // Displays is not supported on this system.
 func Displays() ([]image.Rectangle, error) { return nil, ErrUnsupported }
@@ -35,9 +32,8 @@ func Check(prompt, keys bool) []Problem {
 // PauseBeforeExit does nothing on this system.
 func PauseBeforeExit() {}
 
-// OpenSettings does nothing here: no problem on this system has a settings
-// page.
-func OpenSettings(p Problem) error { return fmt.Errorf("no settings page for this problem") }
+// OpenURL is not supported on this system.
+func OpenURL(u string) error { return ErrUnsupported }
 
 // UseParentConsole does nothing here: programs always have their terminal.
 func UseParentConsole() {}

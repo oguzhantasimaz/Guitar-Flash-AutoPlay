@@ -274,7 +274,7 @@ func (u *UI) start() {
 			u.log("Stopped.")
 		}
 		u.mu.Lock()
-		u.st.running = false
+		u.st.running, u.st.hasPreview = false, false
 		u.st.keyDown = [5]bool{}
 		u.cancel = nil
 		u.mu.Unlock()

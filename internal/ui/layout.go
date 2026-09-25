@@ -325,12 +325,18 @@ func (u *UI) keyEditors(gtx C) D {
 			children = append(children, layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout))
 		}
 		children = append(children, layout.Flexed(1, func(gtx C) D {
-			return widget.Border{Color: fretColors[k], CornerRadius: unit.Dp(6), Width: unit.Dp(2)}.Layout(gtx, func(gtx C) D {
+			// A plain border with a solid colour bar, not a coloured outline:
+			// five outlined boxes in the fret colours would look like fret
+			// rings to the detector.
+			return widget.Border{Color: colStop, CornerRadius: unit.Dp(6), Width: unit.Dp(1)}.Layout(gtx, func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
-						rect := image.Rectangle{Max: gtx.Constraints.Min}
+						size := gtx.Constraints.Min
+						rect := image.Rectangle{Max: size}
 						paint.FillShape(gtx.Ops, colField, clip.UniformRRect(rect, gtx.Dp(6)).Op(gtx.Ops))
-						return D{Size: gtx.Constraints.Min}
+						bar := image.Rect(gtx.Dp(6), size.Y-gtx.Dp(5), size.X-gtx.Dp(6), size.Y-gtx.Dp(2))
+						paint.FillShape(gtx.Ops, fretColors[k], clip.UniformRRect(bar, gtx.Dp(1)).Op(gtx.Ops))
+						return D{Size: size}
 					}),
 					layout.Stacked(func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X

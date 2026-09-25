@@ -60,9 +60,15 @@ func (s scene) render() *image.RGBA {
 		if h < -0.6 || h > 3.5 {
 			continue
 		}
-		half := 2.48 * sp * b.Scale(h)
+		half := HighwayHalfWidth * sp * b.Scale(h)
 		for x := int(b.FretX(2) - half); x <= int(b.FretX(2)+half); x++ {
 			set(img, x, y, color.RGBA{33, 33, 33, 255})
+		}
+		// The white edges of the highway.
+		edge := int(math.Max(1, 0.03*sp))
+		for d := -edge; d <= edge; d++ {
+			set(img, int(b.FretX(2)-half)+d, y, color.RGBA{232, 234, 235, 255})
+			set(img, int(b.FretX(2)+half)+d, y, color.RGBA{232, 234, 235, 255})
 		}
 	}
 	for k := 0; k < 5; k++ {
@@ -236,6 +242,20 @@ func TestLanesConverge(t *testing.T) {
 	}
 	if got, want := b.LaneX(0, VanishHeight), b.FretX(2); math.Abs(got-want) > 1e-9 {
 		t.Errorf("lanes meet at x=%v, want %v", got, want)
+	}
+}
+
+func TestFindBoardIgnoresBoxesWithoutHighway(t *testing.T) {
+	// Five outlined boxes in the fret colours, like the key fields in this
+	// app's own window, must not pass for a fretboard.
+	img := newScene(900, 500, -1000, -1000, 50).render()
+	for k := 0; k < 5; k++ {
+		x := 100 + 140*k
+		fillRect(img, image.Rect(x, 200, x+110, 245), laneRGB[k])
+		fillRect(img, image.Rect(x+3, 203, x+107, 242), color.RGBA{42, 42, 56, 255})
+	}
+	if b, err := FindBoard(img); err != ErrNotFound {
+		t.Fatalf("got %v, %v; want ErrNotFound", b, err)
 	}
 }
 

@@ -93,8 +93,11 @@ func FindBoard(img *image.RGBA) (Board, error) {
 		}
 	}
 
-	best := Board{}
-	bestErr := math.Inf(1)
+	type candidate struct {
+		b   Board
+		err float64
+	}
+	var found []candidate
 	// Any two rings define a candidate line; the others must line up with it.
 	// Using every pair means one covered-up ring does not break detection.
 	for i := 0; i < 5; i++ {
@@ -111,18 +114,53 @@ func FindBoard(img *image.RGBA) (Board, error) {
 					if a.w() < 0.7*s || a.w() > 1.2*s {
 						continue
 					}
-					board, fitErr, ok := fitBoard(cands, a, i, s)
-					if ok && (board.Found > best.Found || (board.Found == best.Found && fitErr < bestErr)) {
-						best, bestErr = board, fitErr
+					if board, fitErr, ok := fitBoard(cands, a, i, s); ok {
+						found = append(found, candidate{board, fitErr})
 					}
 				}
 			}
 		}
 	}
-	if best.Found < 4 {
-		return Board{}, ErrNotFound
+	// The best line of rings that sits at the bottom of a highway: five
+	// coloured boxes elsewhere on the screen (this app's own window has some)
+	// have no highway around them.
+	sort.Slice(found, func(i, j int) bool {
+		if found[i].b.Found != found[j].b.Found {
+			return found[i].b.Found > found[j].b.Found
+		}
+		return found[i].err < found[j].err
+	})
+	for _, c := range found {
+		if hasHighway(img, c.b) {
+			return c.b, nil
+		}
 	}
-	return best, nil
+	return Board{}, ErrNotFound
+}
+
+// HighwayHalfWidth is half the width of the highway at the fret line, in
+// fret spacings; its white edges are there.
+const HighwayHalfWidth = 2.48
+
+// hasHighway checks for the white edges of the highway on both sides of
+// the frets, a little above them.
+func hasHighway(img *image.RGBA, b Board) bool {
+	hits := 0
+	for _, h := range []float64{0.5, 0.9, 1.3} {
+		y := int(math.Round(b.RowY(h)))
+		half := HighwayHalfWidth * b.Spacing * b.Scale(h)
+		tol := 0.06*b.Spacing + 2
+		for _, side := range []float64{-1, 1} {
+			x := b.FretX(2) + side*half
+			for px := int(x - tol); px <= int(x+tol); px++ {
+				if r, g, bb, ok := rgbAt(img, px, y); ok && min(r, g, bb) >= 180 {
+					hits++
+					break
+				}
+			}
+		}
+	}
+	return hits >= 4
 }
 
 // fitBoard collects the ring of every colour closest to where it should be,
